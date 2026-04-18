@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iron Chronicle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+:root {
+  --bg:#0a0805; --bg2:#110e09; --bg3:#1a1510; --border:#3a2e1e; --border-gold:#6b4f1e;
+  --gold:#c9922a; --gold-light:#e8b84b; --gold-dim:#7a5a1a;
+  --text:#d4c4a0; --text-dim:#7a6a50; --text-bright:#f0e0b0;
+  --red:#8b2020; --red-light:#c04040; --green:#2a6b2a; --green-light:#4a9b4a;
+  --blue:#4a7acc; --blue-light:#7aadff; --rare:#e8b84b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,serif;font-size:16px;line-height:1.55;min-height:100vh;background-image:radial-gradient(ellipse at 20% 20%,rgba(100,70,20,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(60,40,10,0.06) 0%,transparent 60%)}
+.container{max-width:700px;margin:0 auto;padding:12px;padding-bottom:80px}
+.header{text-align:center;padding:20px 0 14px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.game-title{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--gold-light);letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 30px rgba(200,150,40,0.4)}
+.game-subtitle{font-style:italic;color:var(--text-dim);font-size:13px;margin-top:4px;letter-spacing:1px}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.panel-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 14px;font-family:'Cinzel',serif;font-size:11px;font-weight:600;color:var(--gold-dim);letter-spacing:2px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.panel-body{padding:14px}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex:1;padding:10px 8px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;min-width:80px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.char-name{font-family:'Cinzel',serif;font-size:20px;color:var(--gold-light);font-weight:600}
+.char-title{font-style:italic;color:var(--text-dim);font-size:14px;margin-bottom:12px}
+.level-badge{display:inline-block;background:var(--bg3);border:1px solid var(--border-gold);padding:4px 12px;font-family:'Cinzel',serif;font-size:12px;color:var(--gold);letter-spacing:1px;margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-row{display:flex;flex-direction:column;gap:3px}
+.stat-label{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+.bar-wrap{height:12px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:1px;overflow:hidden}
+.bar-fill{height:100%;transition:width 0.6s ease}
+.bar-fill.xp{background:linear-gradient(90deg,#2a4a8a,#5a8adf)}
+.bar-fill.hp{background:linear-gradient(90deg,#6b1515,#c04040)}
+.bar-fill.stamina{background:linear-gradient(90deg,#2a6b2a,#4a9b4a)}
+.bar-text{font-size:11px;color:var(--text-dim);margin-top:2px;font-family:'Cinzel',serif}
+.stat-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-chip{background:var(--bg3);border:1px solid var(--border);padding:8px 10px;border-radius:1px;text-align:center}
+.stat-chip-label{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:1.5px}
+.stat-chip-val{font-family:'Cinzel',serif;font-size:18px;color:var(--text-bright);font-weight:600}
+.stat-chip-bonus{font-size:11px;color:var(--green-light);min-height:14px}
+.currency-row{display:flex;gap:14px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)}
+.currency{display:flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:13px}
+.currency-icon{font-size:15px}
+.currency-val{color:var(--gold-light)}
+.currency-label{color:var(--text-dim);font-size:10px;letter-spacing:1px}
+.quest-progress{display:flex;gap:8px;margin:10px 0}
+.quest-pip{width:34px;height:34px;border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--bg);transition:all 0.3s}
+.quest-pip.done{border-color:var(--gold);background:rgba(100,70,20,0.2);color:var(--gold-light)}
+.quest-pip.active{border-color:var(--border-gold);animation:pulse-border 2s infinite}
+@keyframes pulse-border{0%,100%{border-color:var(--border)}50%{border-color:var(--gold-dim)}}
+.quest-desc{font-style:italic;color:var(--text-dim);font-size:14px;margin-bottom:8px}
+.quest-reward{font-size:13px;color:var(--gold-dim)}
+.exercise-entry{background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:12px;margin-bottom:10px}
+.exercise-entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.exercise-num{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.remove-btn{background:none;border:none;color:var(--red-light);cursor:pointer;font-size:16px;padding:0 4px;opacity:0.6}
+.remove-btn:hover{opacity:1}
+.form-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;align-items:end}
+.form-group{display:flex;flex-direction:column;gap:4px}
+label{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
+select,input[type="number"],input[type="text"],textarea{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 9px;font-family:'Crimson Text',serif;font-size:15px;border-radius:1px;width:100%;outline:none;transition:border-color 0.2s;-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+select:focus,input:focus,textarea:focus{border-color:var(--gold-dim)}
+select option{background:var(--bg2)}
+.xp-preview{font-size:12px;color:var(--blue-light);text-align:right;margin-top:6px;font-family:'Cinzel',serif;min-height:16px}
+.btn{font-family:'Cinzel',serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;border:1px solid;padding:10px 18px;cursor:pointer;border-radius:1px;transition:all 0.2s;background:transparent}
+.btn-ghost{border-color:var(--border);color:var(--text-dim)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border-gold);color:var(--text)}
+.btn-primary{background:linear-gradient(135deg,#3a2a0a,#5a3f10);border-color:var(--gold-dim);color:var(--gold-light)}
+.btn-primary:hover:not(:disabled){background:linear-gradient(135deg,#4a3510,#6a4f18);border-color:var(--gold);box-shadow:0 0 20px rgba(200,150,40,0.2)}
+.btn-danger{border-color:var(--red);color:var(--red-light)}
+.btn-danger:hover:not(:disabled){background:rgba(139,32,32,0.15)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-sm{padding:5px 10px;font-size:10px}
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.narrative-box{display:none;background:var(--bg);border:1px solid var(--border-gold);border-radius:2px;padding:16px;margin-bottom:14px;animation:fadeIn 0.5s ease}
+.narrative-box.visible{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.narrative-text{font-style:italic;color:var(--text-bright);font-size:15px;line-height:1.7;margin-bottom:12px}
+.narrative-rewards{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border)}
+.reward-chip{font-family:'Cinzel',serif;font-size:11px;padding:3px 10px;border-radius:1px;border:1px solid;letter-spacing:1px}
+.reward-chip.xp{color:var(--blue-light);border-color:#2a4a8a;background:rgba(40,70,140,0.15)}
+.reward-chip.gold{color:var(--gold-light);border-color:var(--gold-dim);background:rgba(100,70,20,0.15)}
+.reward-chip.stamina{color:var(--green-light);border-color:var(--green);background:rgba(40,100,40,0.15)}
+.reward-chip.stat{color:var(--text-bright);border-color:var(--border-gold);background:rgba(100,70,20,0.1)}
+.history-entry{padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.history-entry:last-child{border-bottom:none}
+.history-date{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);letter-spacing:1px}
+.history-exercises{font-size:13px;color:var(--text);margin-top:2px;word-break:break-word}
+.history-xp{font-family:'Cinzel',serif;font-size:12px;color:var(--blue-light);white-space:nowrap}
+.empty-state{font-style:italic;color:var(--text-dim);font-size:14px;text-align:center;padding:20px 10px}
+.levelup-flash{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:1000;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+.levelup-flash.show{display:flex;animation:fadeIn 0.3s ease}
+.levelup-title{font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:var(--gold-light);letter-spacing:6px;text-shadow:0 0 40px rgba(200,150,40,0.8);margin-bottom:12px;animation:glow 1.5s ease-in-out infinite alternate}
+@keyframes glow{from{text-shadow:0 0 20px rgba(200,150,40,0.6)}to{text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4)}}
+.levelup-sub{font-style:italic;font-size:18px;color:var(--text-bright);margin-bottom:8px}
+.levelup-new-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);letter-spacing:2px;margin-bottom:12px}
+.levelup-ability{color:var(--green-light);margin-bottom:24px;font-size:14px;min-height:20px}
+.levelup-dismiss{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);letter-spacing:2px;cursor:pointer;border:1px solid var(--border);padding:8px 20px;background:transparent}
+.levelup-dismiss:hover{border-color:var(--gold-dim);color:var(--text)}
+.dungeon-item{background:var(--bg);border:1px solid var(--border);padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-radius:2px}
+.dungeon-item.locked{opacity:0.4}
+.dungeon-item.cleared{border-color:var(--green)}
+.dungeon-info{flex:1;min-width:0}
+.dungeon-name{font-family:'Cinzel',serif;font-size:13px;color:var(--text-bright);letter-spacing:1px}
+.dungeon-meta{font-size:11px;color:var(--text-dim);margin-top:3px}
+.dungeon-level-badge{font-family:'Cinzel',serif;font-size:10px;color:var(--gold-dim);letter-spacing:1px}
+.combat-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:500;overflow-y:auto;padding:20px 12px}
+.combat-overlay.show{display:block}
+.combat-container{max-width:600px;margin:0 auto;padding:10px}
+.combat-header{text-align:center;margin-bottom:20px}
+.combat-title{font-family:'Cinzel',serif;font-size:22px;color:var(--gold-light);letter-spacing:3px;margin-bottom:6px}
+.combat-subtitle{font-style:italic;color:var(--text-dim);font-size:13px}
+.combatant{background:var(--bg2);border:1px solid var(--border);padding:14px;border-radius:2px;margin-bottom:12px}
+.combatant.boss{border-color:var(--red)}
+.combatant-name{font-family:'Cinzel',serif;font-size:16px;color:var(--text-bright);letter-spacing:2px;margin-bottom:8px;text-align:center}
+.combatant.boss .combatant-name{color:var(--red-light)}
+.combat-log{background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:2px;margin-bottom:12px;max-height:180px;overflow-y:auto;font-size:14px}
+.combat-log-line{padding:3px 0;border-bottom:1px dotted var(--border)}
+.combat-log-line:last-child{border-bottom:none}
+.log-player{color:var(--blue-light)}
+.log-boss{color:var(--red-light)}
+.log-crit{color:var(--gold-light);font-weight:600}
+.log-dodge{color:var(--green-light)}
+.log-info{color:var(--text-dim);font-style:italic}
+.ability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px}
+.ability-btn{background:var(--bg2);border:1px solid var(--border);padding:10px;cursor:pointer;text-align:left;border-radius:2px;color:var(--text);transition:all 0.2s;font-family:inherit}
+.ability-btn:hover:not(:disabled){border-color:var(--gold-dim);background:var(--bg3)}
+.ability-btn:disabled{opacity:0.35;cursor:not-allowed}
+.ability-name{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-light);letter-spacing:1px;margin-bottom:2px}
+.ability-cost{font-size:11px;color:var(--green-light)}
+.ability-desc{font-size:11px;color:var(--text-dim);margin-top:2px;font-style:italic}
+.combat-result{text-align:center;padding:20px;background:var(--bg2);border:1px solid var(--border-gold);border-radius:2px;margin-bottom:12px}
+.combat-result.win .result-title{color:var(--gold-light)}
+.combat-result.lose .result-title{color:var(--red-light)}
+.result-title{font-family:'Cinzel',serif;font-size:22px;letter-spacing:3px;margin-bottom:10px}
+.equip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.equip-slot{background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:2px;cursor:pointer;transition:all 0.2s;min-height:64px}
+.equip-slot:hover{border-color:var(--border-gold)}
+.equip-slot.has-item{border-color:var(--border-gold)}
+.equip-slot.rare{border-color:var(--gold);box-shadow:inset 0 0 10px rgba(200,150,40,0.1)}
+.slot-label{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.slot-item-name{font-size:13px;color:var(--text)}
+.slot-item-name.rare{color:var(--rare)}
+.slot-item-stats{font-size:11px;color:var(--text-dim);margin-top:3px}
+.slot-empty{font-style:italic;color:var(--text-dim);font-size:12px}
+.inventory-item,.shop-item{background:var(--bg);border:1px solid var(--border);padding:10px;border-radius:2px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.inventory-item.rare{border-color:var(--gold)}
+.inv-info{flex:1;min-width:0}
+.inv-name{font-size:14px;color:var(--text)}
+.inv-name.rare{color:var(--rare)}
+.inv-stats{font-size:11px;color:var(--text-dim);margin-top:3px}
+.inv-actions{display:flex;gap:6px;flex-direction:column}
+.modal-backdrop{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border-gold);padding:20px;max-width:400px;width:100%;border-radius:2px}
+.modal-title{font-family:'Cinzel',serif;font-size:16px;color:var(--gold-light);letter-spacing:2px;margin-bottom:12px}
+.modal-text{font-size:14px;color:var(--text);margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+#modalInput{height:120px;font-family:monospace;font-size:11px;margin-bottom:12px;resize:vertical}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border-gold);padding:10px 20px;font-size:14px;color:var(--text-bright);border-radius:2px;z-index:2000;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.character-portrait{display:block;width:140px;height:140px;margin:0 auto 12px;border:2px solid var(--border-gold);border-radius:2px;background:var(--bg3);object-fit:cover;box-shadow:0 0 20px rgba(200,150,40,0.15),inset 0 0 30px rgba(0,0,0,0.5)}
+.boss-portrait{display:block;width:100%;max-width:280px;height:280px;margin:0 auto 10px;border:2px solid var(--red);border-radius:2px;background:var(--bg3);object-fit:cover;box-shadow:0 0 30px rgba(139,32,32,0.3),inset 0 0 40px rgba(0,0,0,0.6)}
+.dungeon-thumb{width:48px;height:48px;border:1px solid var(--border);border-radius:2px;object-fit:cover;flex-shrink:0;background:var(--bg3)}
+.dungeon-item.cleared .dungeon-thumb{border-color:var(--green)}
+.reward-popup{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:900;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+.reward-popup.show{display:flex;animation:fadeIn 0.3s ease}
+.reward-popup-title{font-family:'Cinzel',serif;font-size:24px;color:var(--gold-light);letter-spacing:4px;text-shadow:0 0 30px rgba(200,150,40,0.6);margin-bottom:8px;text-transform:uppercase}
+.reward-popup-sub{font-style:italic;color:var(--text-bright);font-size:16px;margin-bottom:20px}
+.reward-popup-body{background:var(--bg2);border:1px solid var(--border-gold);padding:20px;border-radius:2px;max-width:400px;width:100%;margin-bottom:20px}
+.reward-popup-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:15px}
+.reward-popup-row:last-child{border-bottom:none}
+.reward-popup-row span:first-child{color:var(--text-dim);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+.reward-popup-row span:last-child{color:var(--gold-light);font-weight:600}
+.reward-popup-dismiss{font-family:'Cinzel',serif;font-size:11px;color:var(--text-dim);letter-spacing:2px;cursor:pointer;border:1px solid var(--border);padding:8px 20px;background:transparent}
+.reward-popup-dismiss:hover{border-color:var(--gold-dim);color:var(--text)}
+.svg-icon{width:24px;height:24px;display:inline-block;vertical-align:middle;fill:currentColor}
+.svg-icon-sm{width:16px;height:16px}
+.svg-icon-lg{width:36px;height:36px}
+.slot-icon{width:36px;height:36px;margin:0 auto 4px;display:block;color:var(--text-dim);opacity:0.5;transition:opacity 0.2s,color 0.2s}
+.equip-slot.has-item .slot-icon{color:var(--gold);opacity:0.9}
+.equip-slot.rare .slot-icon{color:var(--rare);opacity:1;filter:drop-shadow(0 0 4px rgba(200,150,40,0.4))}
+.rarity-gem{width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;color:var(--rare);filter:drop-shadow(0 0 3px rgba(200,150,40,0.6))}
+.currency-svg{width:18px;height:18px;display:inline-block;vertical-align:middle}
+.currency-svg.gold-icon{color:var(--gold-light)}
+.currency-svg.streak-icon{color:var(--red-light)}
+.currency-svg.sessions-icon{color:var(--text-dim)}
+.portrait-frame-corner{position:absolute;width:16px;height:16px;color:var(--gold);pointer-events:none}
+.character-portrait-wrap{position:relative;width:140px;margin:0 auto 12px}
+.character-portrait-wrap .character-portrait{margin:0}
+.character-portrait-wrap .corner-tl{top:-4px;left:-4px}
+.character-portrait-wrap .corner-tr{top:-4px;right:-4px;transform:rotate(90deg)}
+.character-portrait-wrap .corner-bl{bottom:-4px;left:-4px;transform:rotate(-90deg)}
+.character-portrait-wrap .corner-br{bottom:-4px;right:-4px;transform:rotate(180deg)}
+@media (max-width:480px){.form-row{grid-template-columns:1fr 1fr}.form-row .form-group:first-child{grid-column:1/-1}.stats-grid{grid-template-columns:1fr}.tab{font-size:10px;min-width:70px;padding:10px 4px}.currency{font-size:12px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="icon-weapon" viewBox="0 0 24 24"><path d="M5 3l3 3-8 8 3 3 8-8 3 3L5 3zm10 10l4-4 3 3-4 4-3-3zm-1 4l3-3 3 3-3 3-3-3z" stroke="currentColor" stroke-width="1" fill="currentColor"/></symbol>
+<symbol id="icon-helmet" viewBox="0 0 24 24"><path d="M12 2C7 2 4 6 4 11v6h3v-3h2v3h6v-3h2v3h3v-6c0-5-3-9-8-9zm-3 11H7v-2h2v2zm8 0h-2v-2h2v2z" fill="currentColor"/></symbol>
+<symbol id="icon-chest" viewBox="0 0 24 24"><path d="M12 2L6 5v6c0 4 2 8 6 11 4-3 6-7 6-11V5l-6-3zm0 2.5l4 2V11c0 3-1.5 6-4 8-2.5-2-4-5-4-8V6.5l4-2zm0 3.5v8" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.3"/></symbol>
+<symbol id="icon-gloves" viewBox="0 0 24 24"><path d="M8 3v6l-2 1v8h12v-8l-2-1V3h-2v5h-1V2h-2v6h-1V3H9v5H8V3H8z" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.4"/></symbol>
+<symbol id="icon-belt" viewBox="0 0 24 24"><path d="M2 10h20v4H2v-4zm8 1v2h4v-2h-4zm-2-1l2-2h4l2 2m-4 3v3" stroke="currentColor" stroke-width="1.2" fill="none"/><rect x="10" y="11" width="4" height="2" fill="currentColor"/></symbol>
+<symbol id="icon-boots" viewBox="0 0 24 24"><path d="M7 3v10l-3 3v4h8v-2l3-3V3H7zm2 2h4v7l-3 3H9v-2l2-2V5H9V5z" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.3"/></symbol>
+<symbol id="icon-amulet" viewBox="0 0 24 24"><path d="M6 3c0 2 2 4 4 4v3l-3 4 5 6 5-6-3-4V7c2 0 4-2 4-4H6zm6 6l2 3-2 3-2-3 2-3z" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.3"/></symbol>
+<symbol id="icon-ring" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M10 8l2-4 2 4" stroke="currentColor" stroke-width="1.5" fill="currentColor"/></symbol>
+<symbol id="icon-offhand" viewBox="0 0 24 24"><path d="M12 2L4 5v7c0 4 3 8 8 10 5-2 8-6 8-10V5l-8-3zm0 2.5l6 2.2V12c0 3-2 6-6 7.5-4-1.5-6-4.5-6-7.5V6.7l6-2.2z" stroke="currentColor" stroke-width="1" fill="currentColor" fill-opacity="0.3"/></symbol>
+<symbol id="icon-gold" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="currentColor" fill-opacity="0.2"/><text x="12" y="16" text-anchor="middle" font-family="Cinzel,serif" font-size="10" font-weight="900" fill="currentColor">G</text></symbol>
+<symbol id="icon-streak" viewBox="0 0 24 24"><path d="M12 2c-1 3-4 5-4 9 0 3 2 6 4 6s4-3 4-6c-1 1-2 1-2-1 0-3-1-5-2-8zm-1 11c0 2 1 3 1 3s1-1 1-3c-1 0-1-1-1-2-1 1-1 2-1 2z" fill="currentColor"/></symbol>
+<symbol id="icon-sessions" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3zm2 3v2h10V6H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z" fill="currentColor"/></symbol>
+<symbol id="icon-gem" viewBox="0 0 24 24"><path d="M12 2L4 10l8 12 8-12-8-8zm0 3l4 5-4 8-4-8 4-5z" fill="currentColor"/></symbol>
+<symbol id="icon-corner" viewBox="0 0 16 16"><path d="M0 0h6v1H1v5H0V0zm0 6h1v2l1 1h3v1H0V6z" fill="currentColor"/></symbol>
+</defs>
+</svg>
+<div class="container">
+<div class="header">
+<div class="game-title">Iron Chronicle</div>
+<div class="game-subtitle">A record of iron &amp; will</div>
+</div>
+<div class="tabs" id="tabBar">
+<button class="tab active" data-tab="main">Home</button>
+<button class="tab" data-tab="stats">Stats</button>
+<button class="tab" data-tab="train">Train</button>
+<button class="tab" data-tab="dungeons">Dungeons</button>
+<button class="tab" data-tab="gear">Gear</button>
+<button class="tab" data-tab="shop">Shop</button>
+<button class="tab" data-tab="history">Log</button>
+</div>
+<div class="tab-content active" id="tab-main">
+<div class="narrative-box" id="narrativeBox">
+<div class="narrative-text" id="narrativeText"></div>
+<div class="narrative-rewards" id="narrativeRewards"></div>
+</div>
+<div class="panel">
+<div class="panel-header">Character</div>
+<div class="panel-body">
+<div class="character-portrait-wrap">
+<img src="images/character.png" alt="Character" class="character-portrait" onerror="this.style.display='none'">
+<svg class="portrait-frame-corner corner-tl"><use href="#icon-corner"/></svg>
+<svg class="portrait-frame-corner corner-tr"><use href="#icon-corner"/></svg>
+<svg class="portrait-frame-corner corner-bl"><use href="#icon-corner"/></svg>
+<svg class="portrait-frame-corner corner-br"><use href="#icon-corner"/></svg>
+</div>
+<div class="char-name" id="charName">The Wanderer</div>
+<div class="char-title" id="charTitle">— Untested, yet unbroken —</div>
+<div class="level-badge" id="levelBadge">LEVEL 1</div>
+<div class="stats-grid">
+<div class="stat-row"><div class="stat-label">Experience</div><div class="bar-wrap"><div class="bar-fill xp" id="xpBar" style="width:0%"></div></div><div class="bar-text" id="xpText">0 / 100 XP</div></div>
+<div class="stat-row"><div class="stat-label">Stamina</div><div class="bar-wrap"><div class="bar-fill stamina" id="staminaBar" style="width:0%"></div></div><div class="bar-text" id="staminaText">0 / 100</div></div>
+</div>
+<div class="stat-chips">
+<div class="stat-chip"><div class="stat-chip-label">STR</div><div class="stat-chip-val" id="strVal">1</div><div class="stat-chip-bonus" id="strBonus"></div></div>
+<div class="stat-chip"><div class="stat-chip-label">DEX</div><div class="stat-chip-val" id="dexVal">1</div><div class="stat-chip-bonus" id="dexBonus"></div></div>
+<div class="stat-chip"><div class="stat-chip-label">VIT</div><div class="stat-chip-val" id="vitVal">1</div><div class="stat-chip-bonus" id="vitBonus"></div></div>
+</div>
+<div class="currency-row">
+<div class="currency"><svg class="currency-svg gold-icon"><use href="#icon-gold"/></svg><span class="currency-val" id="goldVal">0</span><span class="currency-label">GOLD</span></div>
+<div class="currency"><svg class="currency-svg streak-icon"><use href="#icon-streak"/></svg><span class="currency-val" id="streakVal">0</span><span class="currency-label">STREAK</span></div>
+<div class="currency"><svg class="currency-svg sessions-icon"><use href="#icon-sessions"/></svg><span class="currency-val" id="totalVal">0</span><span class="currency-label">SESSIONS</span></div>
+</div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-header">Weekly Quest</div>
+<div class="panel-body">
+<div class="quest-desc" id="questDesc">Train 3 times this week.</div>
+<div class="quest-progress" id="questPips"></div>
+<div class="quest-reward" id="questReward"></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-header">Data</div>
+<div class="panel-body">
+<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Your progress is saved locally. Export a backup to keep it safe.</div>
+<div class="btn-row">
+<button class="btn btn-ghost btn-sm" id="btnExport">Export Save</button>
+<button class="btn btn-ghost btn-sm" id="btnImport">Import Save</button>
+<button class="btn btn-danger btn-sm" id="btnReset">Reset Game</button>
+</div>
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-stats">
+<div class="panel">
+<div class="panel-header">Combat Stats</div>
+<div class="panel-body" id="statsPanel"></div>
+</div>
+<div class="panel">
+<div class="panel-header">Base Stats</div>
+<div class="panel-body" id="baseStatsPanel"></div>
+</div>
+<div class="panel">
+<div class="panel-header">Gear Contribution</div>
+<div class="panel-body" id="gearStatsPanel"></div>
+</div>
+<div class="panel">
+<div class="panel-header">Abilities Unlocked</div>
+<div class="panel-body" id="abilitiesPanel"></div>
+</div>
+</div>
+<div class="tab-content" id="tab-train">
+<div class="panel">
+<div class="panel-header">Log a Training Session</div>
+<div class="panel-body">
+<div id="exerciseList"></div>
+<div class="btn-row">
+<button class="btn btn-ghost" id="btnAddExercise">+ Add Exercise</button>
+<button class="btn btn-primary" id="btnLogWorkout">⚔ Complete Session</button>
+</div>
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-dungeons">
+<div class="panel">
+<div class="panel-header">Trials of the Depths</div>
+<div class="panel-body">
+<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">Each trial costs <span style="color:var(--green-light)">20 stamina</span>. First clear each week drops an item.</div>
+<div id="dungeonList"></div>
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-gear">
+<div class="panel">
+<div class="panel-header">Equipped</div>
+<div class="panel-body"><div class="equip-grid" id="equipGrid"></div></div>
+</div>
+<div class="panel">
+<div class="panel-header">Inventory</div>
+<div class="panel-body" id="inventoryList"><div class="empty-state">Your pack is empty.</div></div>
+</div>
+</div>
+<div class="tab-content" id="tab-shop">
+<div class="panel">
+<div class="panel-header"><span>Merchant's Stall</span><span id="shopRefresh" style="font-size:10px;color:var(--text-dim);"></span></div>
+<div class="panel-body">
+<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">Stock rotates each Monday. Only normal wares — rares drop from trials.</div>
+<div id="shopList"></div>
+</div>
+</div>
+</div>
+<div class="tab-content" id="tab-history">
+<div class="panel">
+<div class="panel-header">Chronicles</div>
+<div class="panel-body" id="historyPanel"><div class="empty-state">No sessions recorded yet.</div></div>
+</div>
+</div>
+</div>
+<div class="levelup-flash" id="levelUpFlash">
+<div class="levelup-title">LEVEL UP</div>
+<div class="levelup-sub" id="levelUpSub"></div>
+<div class="levelup-new-title" id="levelUpNewTitle"></div>
+<div class="levelup-ability" id="levelUpAbility"></div>
+<button class="levelup-dismiss" id="btnDismissLevelUp">— Continue your journey —</button>
+</div>
+<div class="combat-overlay" id="combatOverlay">
+<div class="combat-container">
+<div class="combat-header">
+<div class="combat-title" id="combatTitle">TRIAL</div>
+<div class="combat-subtitle" id="combatSubtitle"></div>
+</div>
+<div class="combatant boss">
+<div class="combatant-name" id="bossName">Boss</div>
+<img id="bossPortrait" class="boss-portrait" src="" alt="" onerror="this.style.display='none'">
+<div class="bar-wrap"><div class="bar-fill hp" id="bossHpBar" style="width:100%"></div></div>
+<div class="bar-text" id="bossHpText">100 / 100</div>
+</div>
+<div class="combatant">
+<div class="combatant-name">You</div>
+<div class="bar-wrap"><div class="bar-fill hp" id="playerHpBar" style="width:100%"></div></div>
+<div class="bar-text" id="playerHpText">100 / 100</div>
+<div style="margin-top:8px"><div class="bar-wrap"><div class="bar-fill stamina" id="playerStaminaBar" style="width:100%"></div></div>
+<div class="bar-text" id="playerStaminaText">100 / 100 Stamina</div></div>
+</div>
+<div class="combat-log" id="combatLog"></div>
+<div id="combatActions"><div class="ability-grid" id="abilityGrid"></div></div>
+<div id="combatResultArea"></div>
+</div>
+</div>
+<div class="modal-backdrop" id="modalBackdrop">
+<div class="modal">
+<div class="modal-title" id="modalTitle"></div>
+<div class="modal-text" id="modalText"></div>
+<textarea id="modalInput" style="display:none;"></textarea>
+<div class="modal-actions" id="modalActions"></div>
+</div>
+</div>
+<div class="reward-popup" id="rewardPopup">
+<div class="reward-popup-title" id="rewardPopupTitle">SESSION COMPLETE</div>
+<div class="reward-popup-sub" id="rewardPopupSub"></div>
+<div class="reward-popup-body" id="rewardPopupBody"></div>
+<button class="reward-popup-dismiss" id="btnDismissReward">— Onward —</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const CONFIG={xpDivisor:10,bodyweightMultiplier:15,sessionBonusXP:20,goldPerXPRatio:0.4,staminaPerXPRatio:1/15,staminaCap:100,volumeSetsForVIT:12,weeklyTarget:3,questGoldReward:200,questXPReward:150,dungeonStaminaCost:20,bossHpMult:50,bossDmgBase:5,bossDmgScale:3,bossDefScale:2,critChanceMult:1.5,critChanceCap:40,critMultiplier:1.5,vitDefenseFactor:0.5,gearDampening:0.35,dungeonGoldMult:25,dungeonXPMult:30,rareDropChance:0.20,baseHP:80,hpPerVIT:5,shopSize:5,startingGold:50,startingStamina:20};
+const EXERCISES=[{name:"Deadlift",coeff:1.00,bodyweight:false,stat:"STR"},{name:"Barbell Squat",coeff:1.00,bodyweight:false,stat:"STR"},{name:"Trap Bar Deadlift",coeff:0.95,bodyweight:false,stat:"STR"},{name:"Bench Press",coeff:0.85,bodyweight:false,stat:"STR"},{name:"Overhead Press",coeff:0.85,bodyweight:false,stat:"STR"},{name:"Barbell Row",coeff:0.85,bodyweight:false,stat:"STR"},{name:"Weighted Pull-up",coeff:0.85,bodyweight:false,stat:"STR"},{name:"Romanian Deadlift",coeff:0.75,bodyweight:false,stat:"STR"},{name:"Incline Bench",coeff:0.75,bodyweight:false,stat:"STR"},{name:"Dumbbell Row",coeff:0.70,bodyweight:false,stat:"STR"},{name:"Lunges",coeff:0.70,bodyweight:false,stat:"DEX"},{name:"Pull-up",coeff:0.80,bodyweight:true,stat:"DEX"},{name:"Dip",coeff:0.70,bodyweight:true,stat:"DEX"},{name:"Push-up",coeff:0.50,bodyweight:true,stat:"DEX"},{name:"Bicep Curl",coeff:0.40,bodyweight:false,stat:"STR"},{name:"Tricep Extension",coeff:0.40,bodyweight:false,stat:"STR"},{name:"Lateral Raise",coeff:0.35,bodyweight:false,stat:"DEX"},{name:"Leg Curl",coeff:0.45,bodyweight:false,stat:"DEX"},{name:"Leg Extension",coeff:0.45,bodyweight:false,stat:"DEX"},{name:"Calf Raise",coeff:0.35,bodyweight:false,stat:"DEX"},{name:"Face Pull",coeff:0.40,bodyweight:false,stat:"DEX"}];
+const LEVELS=[{level:1,xpNeeded:100,title:"Untested Wanderer"},{level:2,xpNeeded:250,title:"Initiate of Iron"},{level:3,xpNeeded:450,title:"Footsoldier"},{level:4,xpNeeded:700,title:"Seasoned Fighter"},{level:5,xpNeeded:1050,title:"Iron-Willed Warrior"},{level:6,xpNeeded:1500,title:"Veteran of the Forge"},{level:7,xpNeeded:2100,title:"Champion of Endurance"},{level:8,xpNeeded:2900,title:"Warlord of Will"},{level:9,xpNeeded:4000,title:"Ironborn Legend"},{level:10,xpNeeded:999999,title:"The Unbroken"}];
+const ABILITIES=[{id:"basic",name:"Basic Attack",cost:0,unlockLvl:1,desc:"A standard strike.",effect:"basic"},{id:"power",name:"Power Strike",cost:15,unlockLvl:2,desc:"200% damage on this hit.",effect:"power"},{id:"iron",name:"Iron Skin",cost:20,unlockLvl:4,desc:"Reduce next incoming hit by 50%.",effect:"iron"},{id:"cry",name:"Battle Cry",cost:25,unlockLvl:6,desc:"+25% damage for 3 turns.",effect:"cry"},{id:"reckless",name:"Reckless Blow",cost:30,unlockLvl:8,desc:"300% damage, take 20 recoil.",effect:"reckless"},{id:"unbroken",name:"Unbroken",cost:40,unlockLvl:10,desc:"Survive one lethal hit at 1 HP.",effect:"unbroken"}];
+const SLOTS=[{id:"weapon",name:"Weapon",stats:["STR","DEX"]},{id:"helmet",name:"Helmet",stats:["VIT"]},{id:"chest",name:"Chest",stats:["VIT","STR"]},{id:"gloves",name:"Gloves",stats:["DEX","STR"]},{id:"belt",name:"Belt",stats:["VIT"]},{id:"boots",name:"Boots",stats:["DEX"]},{id:"amulet",name:"Amulet",stats:["STR","DEX","VIT"]},{id:"ring1",name:"Ring I",stats:["STR","DEX","VIT"]},{id:"ring2",name:"Ring II",stats:["STR","DEX","VIT"]},{id:"offhand",name:"Offhand",stats:["STR","VIT"]}];
+const ARMOR_SLOTS=["helmet","chest","gloves","belt","boots"];
+const TIERS=[{tier:1,name:"Rough Iron",levelReq:1,minBonus:1,maxBonus:3,shopPrice:80,sellPrice:15},{tier:2,name:"Hardened Steel",levelReq:3,minBonus:3,maxBonus:6,shopPrice:180,sellPrice:30},{tier:3,name:"Shadowforged",levelReq:5,minBonus:6,maxBonus:10,shopPrice:350,sellPrice:45},{tier:4,name:"Dragonbone",levelReq:7,minBonus:10,maxBonus:15,shopPrice:600,sellPrice:60},{tier:5,name:"Legendary",levelReq:9,minBonus:15,maxBonus:22,shopPrice:950,sellPrice:75}];
+const RARE_MULT=1.2;
+const RARE_SELL_MULT=2;
+const NARRATIVES=["The iron does not lie. You faced the weight and did not flinch.","Another session etched into your bones. You are becoming harder than yesterday.","The forge demands heat. You provided it.","Sweat on the floor, fire in the lungs. The easy path was there — you chose the other.","Fatigue is the proof of effort. You carry it home like a trophy no one else can see.","There are those who speak of strength. You build it quietly.","The weights were indifferent to your struggle. You moved them anyway.","Not every battle is glorious. Some are just you and a barbell, grinding.","Your ancestors carried boulders across open land. Today you honored that inheritance.","Pain is temporary. The adaptation it triggers is permanent.","The body is clay. Time is the kiln. Each session is fire.","Somewhere a younger version of you is watching. You did not quit today.","The bar moves up, or it moves down. Today it moved up.","Small sessions compound into transformed lives.","No one is coming to do this for you. That is not the tragedy — that is the gift."];
+const WEEKLY_BOSSES=["the Ironhide Boar","the Stone Sentinel","the Frost Colossus","the Ancient Crusher","the Shadow Titan","the Hollow Knight","the Ashen Goliath","the Tide Crusher","the Bone Warden","the Pale Siege"];
+const DUNGEON_BOSSES=["The Hollow Rat King","Stoneback Troll","Ironjaw Wolf","The Fungal Colossus","Ashbone Warlord","The Blind Sentinel","Veincracker Ogre","The Tide Horror","Duskmane Lion","The Shattered Knight","Scalehide Behemoth","The Pale Executioner","Thornwall Giant","Abyssal Lurker","The Iron Revenant","Cinderborn Drake","The Void Shepherd","Colossus of Salt","The Unmade","The Eternal Forge Guardian"];
+const ITEM_NAMES={weapon:["Blade","Axe","Hammer","Maul","Cleaver","Saber"],helmet:["Helm","Crown","Hood","Coif","Circlet","Visor"],chest:["Chestplate","Cuirass","Hauberk","Breastplate","Vest","Armor"],gloves:["Gauntlets","Grips","Handwraps","Bracers","Gloves"],belt:["Belt","Girdle","Sash","Waistguard","Cinch"],boots:["Boots","Greaves","Treads","Stompers","Sabatons"],amulet:["Amulet","Talisman","Pendant","Charm","Relic"],ring1:["Ring","Band","Signet","Loop","Circle"],ring2:["Ring","Band","Signet","Loop","Circle"],offhand:["Shield","Bulwark","Aegis","Tome","Focus","Buckler"]};
+const STORAGE_KEY="ironChronicle_v1";
+let state,combat=null,exerciseCounter=0,itemIdCounter=1;
+function makeItemId(){itemIdCounter++;return 'it_'+Date.now().toString(36)+'_'+itemIdCounter}
+function getWeekStart(){const d=new Date();const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);const mon=new Date(d.setDate(diff));mon.setHours(0,0,0,0);return mon.getTime()}
+function defaultState(){return{name:"The Wanderer",level:1,xp:0,gold:CONFIG.startingGold,stamina:CONFIG.startingStamina,str:1,dex:1,vit:1,weekSessions:0,weekStart:getWeekStart(),streak:0,totalSessions:0,currentWeeklyBoss:WEEKLY_BOSSES[Math.floor(Math.random()*WEEKLY_BOSSES.length)],questCompleted:false,history:[],inventory:[],equipped:{},dungeonsCleared:0,dungeonsClearedThisWeek:[],shopStock:[],shopWeek:getWeekStart()}}
+function migrateWeek(s){const currentWeek=getWeekStart();if(s.weekStart!==currentWeek){if(s.weekSessions>=CONFIG.weeklyTarget)s.streak=(s.streak||0)+1;else s.streak=0;s.weekSessions=0;s.weekStart=currentWeek;s.questCompleted=false;s.currentWeeklyBoss=WEEKLY_BOSSES[Math.floor(Math.random()*WEEKLY_BOSSES.length)];s.dungeonsClearedThisWeek=[];s.shopStock=generateShopStock();s.shopWeek=currentWeek}return s}
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw){const s=JSON.parse(raw);if(s&&typeof s==='object'){const def=defaultState();for(const k in def)if(!(k in s))s[k]=def[k];return migrateWeek(s)}}}catch(e){console.error("load failed",e)}const fresh=defaultState();fresh.shopStock=generateShopStock();return fresh}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){console.error("save failed",e)}}
+function getGearBonus(){const bonus={STR:0,DEX:0,VIT:0,armor:0};for(const slotId in state.equipped){const item=state.equipped[slotId];if(!item)continue;for(const stat in item.bonuses){if(bonus[stat]!==undefined)bonus[stat]+=item.bonuses[stat]}if(ARMOR_SLOTS.indexOf(slotId)!==-1){let total=0;for(const s in item.bonuses)total+=item.bonuses[s];bonus.armor+=total}}return bonus}
+function getCombatStats(){const gear=getGearBonus();const d=CONFIG.gearDampening;const str=state.str+Math.floor(gear.STR*d);const dex=state.dex+Math.floor(gear.DEX*d);const vit=state.vit+Math.floor(gear.VIT*d);return{STR:str,DEX:dex,VIT:vit,armor:Math.floor(gear.armor*d),maxHP:CONFIG.baseHP+vit*CONFIG.hpPerVIT,gearRaw:gear}}
+function calcExerciseXP(ex){const exercise=EXERCISES.find(e=>e.name===ex.name);if(!exercise)return 0;let xp;if(exercise.bodyweight)xp=ex.reps*ex.sets*exercise.coeff*CONFIG.bodyweightMultiplier;else xp=ex.weight*ex.reps*ex.sets*exercise.coeff;return Math.round(xp/CONFIG.xpDivisor)}
+function getLevelData(level){return LEVELS[Math.min(level-1,LEVELS.length-1)]}
+function xpForLevelStart(level){let total=0;for(let i=0;i<level-1;i++)total+=LEVELS[i].xpNeeded;return total}
+function getCurrentLevelXP(){return state.xp-xpForLevelStart(state.level)}
+function getCurrentLevelMax(){return getLevelData(state.level).xpNeeded}
+function checkLevelUp(){let newAbility=null;while(state.level<LEVELS.length){const needed=getLevelData(state.level).xpNeeded;if(getCurrentLevelXP()>=needed){state.level++;const ability=ABILITIES.find(a=>a.unlockLvl===state.level);if(ability)newAbility=ability}else break}return newAbility}
+function addExercise(){exerciseCounter++;const id=exerciseCounter;const div=document.createElement('div');div.className='exercise-entry';div.dataset.entryId=id;const options=EXERCISES.map(e=>'<option value="'+e.name+'">'+e.name+(e.bodyweight?' (BW)':'')+'</option>').join('');div.innerHTML='<div class="exercise-entry-header"><span class="exercise-num">EXERCISE '+id+'</span><button class="remove-btn" title="Remove">✕</button></div><div class="form-row"><div class="form-group"><label>Exercise</label><select class="ex-name">'+options+'</select></div><div class="form-group"><label>Weight (kg)</label><input type="number" class="ex-weight" value="60" min="0" step="2.5"></div><div class="form-group"><label>Reps</label><input type="number" class="ex-reps" value="8" min="1" max="100"></div><div class="form-group"><label>Sets</label><input type="number" class="ex-sets" value="3" min="1" max="20"></div></div><div class="xp-preview"></div>';document.getElementById('exerciseList').appendChild(div);div.querySelector('.remove-btn').addEventListener('click',function(){div.remove()});div.querySelectorAll('.ex-name, .ex-weight, .ex-reps, .ex-sets').forEach(function(inp){inp.addEventListener('input',function(){updatePreview(div)});inp.addEventListener('change',function(){updatePreview(div)})});updatePreview(div)}
+function updatePreview(entryDiv){const name=entryDiv.querySelector('.ex-name').value;const weightEl=entryDiv.querySelector('.ex-weight');const weight=parseFloat(weightEl.value)||0;const reps=parseInt(entryDiv.querySelector('.ex-reps').value)||0;const sets=parseInt(entryDiv.querySelector('.ex-sets').value)||0;const exercise=EXERCISES.find(e=>e.name===name);if(!exercise)return;weightEl.parentElement.style.opacity=exercise.bodyweight?'0.35':'1';const xp=calcExerciseXP({name:name,weight:weight,reps:reps,sets:sets});const preview=entryDiv.querySelector('.xp-preview');if(preview)preview.textContent=xp>0?'+'+xp+' XP · +'+sets+' '+exercise.stat:''}
+function gatherExercises(){const entries=document.querySelectorAll('.exercise-entry');const result=[];entries.forEach(function(entry){const name=entry.querySelector('.ex-name').value;const weight=parseFloat(entry.querySelector('.ex-weight').value)||0;const reps=parseInt(entry.querySelector('.ex-reps').value)||0;const sets=parseInt(entry.querySelector('.ex-sets').value)||0;if(name&&reps>0&&sets>0)result.push({name:name,weight:weight,reps:reps,sets:sets})});return result}
+function logWorkout(){const exercises=gatherExercises();if(exercises.length===0){toast('Add at least one exercise.');return}let totalXP=0;let totalSets=0;const statGains={STR:0,DEX:0,VIT:0};exercises.forEach(function(ex){totalXP+=calcExerciseXP(ex);totalSets+=ex.sets;const exercise=EXERCISES.find(e=>e.name===ex.name);if(exercise)statGains[exercise.stat]+=ex.sets});totalXP+=CONFIG.sessionBonusXP;if(totalSets>=CONFIG.volumeSetsForVIT)statGains.VIT+=1;const goldEarned=Math.floor(totalXP*CONFIG.goldPerXPRatio);const staminaEarned=Math.floor(totalXP*CONFIG.staminaPerXPRatio);state.weekSessions=Math.min(state.weekSessions+1,CONFIG.weeklyTarget);let questBonusXP=0;let questJustDone=false;if(state.weekSessions>=CONFIG.weeklyTarget&&!state.questCompleted){state.questCompleted=true;state.gold+=CONFIG.questGoldReward;questBonusXP=CONFIG.questXPReward;totalXP+=questBonusXP;questJustDone=true}state.totalSessions++;state.gold+=goldEarned;state.stamina=Math.min(CONFIG.staminaCap,state.stamina+staminaEarned);state.str+=statGains.STR;state.dex+=statGains.DEX;state.vit+=statGains.VIT;state.xp+=totalXP;const newAbility=checkLevelUp();state.history.unshift({date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'}),exercises:exercises.map(function(e){const info=EXERCISES.find(x=>x.name===e.name);if(info&&info.bodyweight)return e.name+' '+e.sets+'×'+e.reps;return e.name+' '+e.sets+'×'+e.reps+'@'+e.weight+'kg'}),xp:totalXP});if(state.history.length>30)state.history.pop();saveState();showNarrative(totalXP,goldEarned,staminaEarned,statGains,questJustDone,questBonusXP);queueRewardPopup('session',{xp:totalXP-questBonusXP,gold:goldEarned,stamina:staminaEarned,stats:statGains});if(questJustDone)queueRewardPopup('quest',{boss:state.currentWeeklyBoss,streak:state.streak+1});document.getElementById('exerciseList').innerHTML='';exerciseCounter=0;addExercise();renderAll();switchTab('main');if(newAbility)setTimeout(function(){showLevelUp(newAbility)},500);else setTimeout(showNextRewardPopup,400)}
+function showNarrative(xp,gold,stamina,stats,questDone,questBonus){const text=NARRATIVES[Math.floor(Math.random()*NARRATIVES.length)];document.getElementById('narrativeText').textContent='"'+text+'"';let rewards='<span class="reward-chip xp">+'+xp+' XP</span>';rewards+='<span class="reward-chip gold">+'+gold+' Gold</span>';rewards+='<span class="reward-chip stamina">+'+stamina+' Stamina</span>';if(stats.STR>0)rewards+='<span class="reward-chip stat">+'+stats.STR+' STR</span>';if(stats.DEX>0)rewards+='<span class="reward-chip stat">+'+stats.DEX+' DEX</span>';if(stats.VIT>0)rewards+='<span class="reward-chip stat">+'+stats.VIT+' VIT</span>';if(questDone)rewards+='<span class="reward-chip gold">✦ QUEST! +'+CONFIG.questGoldReward+'g +'+questBonus+' XP</span>';document.getElementById('narrativeRewards').innerHTML=rewards;const box=document.getElementById('narrativeBox');box.classList.remove('visible');void box.offsetWidth;box.classList.add('visible');setTimeout(function(){box.scrollIntoView({behavior:'smooth',block:'nearest'})},100)}
+function showLevelUp(newAbility){const data=getLevelData(state.level);document.getElementById('levelUpSub').textContent='You have reached Level '+state.level+'.';document.getElementById('levelUpNewTitle').textContent='✦ '+data.title+' ✦';document.getElementById('levelUpAbility').textContent=newAbility?'New ability: '+newAbility.name:'';document.getElementById('levelUpFlash').classList.add('show')}
+function dismissLevelUp(){document.getElementById('levelUpFlash').classList.remove('show');setTimeout(showNextRewardPopup,300)}
+let rewardPopupQueue=[];
+function queueRewardPopup(type,data){rewardPopupQueue.push({type:type,data:data})}
+function showNextRewardPopup(){if(rewardPopupQueue.length===0)return;const{type,data}=rewardPopupQueue.shift();const titleEl=document.getElementById('rewardPopupTitle');const subEl=document.getElementById('rewardPopupSub');const bodyEl=document.getElementById('rewardPopupBody');let rows='';if(type==='session'){titleEl.textContent='SESSION COMPLETE';subEl.textContent='The forge accepts your effort.';rows+='<div class="reward-popup-row"><span>Experience</span><span>+'+data.xp+' XP</span></div>';rows+='<div class="reward-popup-row"><span>Gold</span><span>+'+data.gold+'</span></div>';rows+='<div class="reward-popup-row"><span>Stamina</span><span>+'+data.stamina+'</span></div>';if(data.stats.STR>0)rows+='<div class="reward-popup-row"><span>Strength</span><span>+'+data.stats.STR+'</span></div>';if(data.stats.DEX>0)rows+='<div class="reward-popup-row"><span>Dexterity</span><span>+'+data.stats.DEX+'</span></div>';if(data.stats.VIT>0)rows+='<div class="reward-popup-row"><span>Vitality</span><span>+'+data.stats.VIT+'</span></div>'}else if(type==='quest'){titleEl.textContent='WEEKLY QUEST COMPLETE';subEl.textContent=data.boss+' falls before you!';rows+='<div class="reward-popup-row"><span>Bonus Gold</span><span>+'+CONFIG.questGoldReward+'</span></div>';rows+='<div class="reward-popup-row"><span>Bonus XP</span><span>+'+CONFIG.questXPReward+'</span></div>';rows+='<div class="reward-popup-row"><span>Streak</span><span>'+data.streak+' weeks</span></div>'}bodyEl.innerHTML=rows;document.getElementById('rewardPopup').classList.add('show')}
+function dismissRewardPopup(){document.getElementById('rewardPopup').classList.remove('show');setTimeout(showNextRewardPopup,300)}
+function pickTierForLevel(playerLevel){const available=TIERS.filter(t=>t.levelReq<=playerLevel);if(available.length===0)return TIERS[0];const weights=available.map((t,i)=>i+1);const sum=weights.reduce((a,b)=>a+b,0);let r=Math.random()*sum;for(let i=0;i<available.length;i++){r-=weights[i];if(r<=0)return available[i]}return available[available.length-1]}
+function generateItem(slotId,forceTier,forceRare){const slot=SLOTS.find(s=>s.id===slotId);const tier=forceTier||pickTierForLevel(state?state.level:1);const isRare=(typeof forceRare==='boolean')?forceRare:(Math.random()<CONFIG.rareDropChance);const bonuses={};let possibleStats=slot.stats.slice();if(slotId==="amulet"||slotId==="weapon"||slotId==="offhand"){possibleStats=[slot.stats[Math.floor(Math.random()*slot.stats.length)]]}possibleStats.forEach(function(stat){const min=tier.minBonus;const max=isRare?Math.floor(tier.maxBonus*RARE_MULT):tier.maxBonus;bonuses[stat]=min+Math.floor(Math.random()*(max-min+1));if(slotId==="amulet")bonuses[stat]=Math.floor(bonuses[stat]*1.3)});const nameBase=ITEM_NAMES[slotId][Math.floor(Math.random()*ITEM_NAMES[slotId].length)];const baseName=tier.name+' '+nameBase;const name=isRare?'✦ '+baseName:baseName;return{id:makeItemId(),slotId:slotId,slotName:slot.name,name:name,tier:tier.tier,tierName:tier.name,levelReq:tier.levelReq,rare:isRare,bonuses:bonuses}}
+function formatItemStats(item){return Object.keys(item.bonuses).map(s=>'+'+item.bonuses[s]+' '+s).join(' · ')}
+function formatItemStatsDetailed(item){const d=CONFIG.gearDampening;return Object.keys(item.bonuses).map(function(s){const raw=item.bonuses[s];const eff=Math.floor(raw*d);return '+'+raw+' '+s+' <span style="color:var(--text-dim);font-size:10px;">(eff +'+eff+')</span>'}).join(' · ')}
+function generateShopStock(){const stock=[];for(let i=0;i<CONFIG.shopSize;i++){const slotId=SLOTS[Math.floor(Math.random()*SLOTS.length)].id;stock.push(generateItem(slotId,null,false))}return stock}
+function buyItem(idx){const item=state.shopStock[idx];if(!item)return;const tier=TIERS.find(t=>t.tier===item.tier);if(state.gold<tier.shopPrice){toast("Not enough gold.");return}if(state.level<item.levelReq){toast('Requires level '+item.levelReq+'.');return}state.gold-=tier.shopPrice;state.inventory.push(item);state.shopStock.splice(idx,1);saveState();renderAll();toast('Purchased '+item.name+'.')}
+function equipItem(itemId){const idx=state.inventory.findIndex(i=>i.id===itemId);if(idx<0)return;const item=state.inventory[idx];if(state.level<item.levelReq){toast('Requires level '+item.levelReq+'.');return}const current=state.equipped[item.slotId];state.inventory.splice(idx,1);if(current)state.inventory.push(current);state.equipped[item.slotId]=item;saveState();renderAll()}
+function unequipItem(slotId){const item=state.equipped[slotId];if(!item)return;state.inventory.push(item);delete state.equipped[slotId];saveState();renderAll()}
+function sellItem(itemId){const idx=state.inventory.findIndex(i=>i.id===itemId);if(idx<0)return;const item=state.inventory[idx];const tier=TIERS.find(t=>t.tier===item.tier);const price=item.rare?tier.sellPrice*RARE_SELL_MULT:tier.sellPrice;state.gold+=price;state.inventory.splice(idx,1);saveState();renderAll();toast('Sold for '+price+' gold.')}
+function enterDungeon(level){if(state.stamina<CONFIG.dungeonStaminaCost){toast("Not enough stamina.");return}if(level>state.dungeonsCleared+1){toast("Clear the previous trial first.");return}state.stamina-=CONFIG.dungeonStaminaCost;saveState();const stats=getCombatStats();const bossHP=CONFIG.bossHpMult*level*level;const bossDmg=CONFIG.bossDmgBase+level*CONFIG.bossDmgScale;const bossDef=level*CONFIG.bossDefScale;combat={level:level,bossName:DUNGEON_BOSSES[level-1],bossHP:bossHP,bossMaxHP:bossHP,bossDmg:bossDmg,bossDef:bossDef,playerHP:stats.maxHP,playerMaxHP:stats.maxHP,playerStamina:state.stamina,stats:stats,log:[],effects:{powerNext:false,ironNext:0,cryTurns:0,unbrokenUsed:false,unbrokenActive:false},ended:false};document.getElementById('combatResultArea').innerHTML='';document.getElementById('combatActions').style.display='block';document.getElementById('combatOverlay').classList.add('show');document.getElementById('combatTitle').textContent='TRIAL '+level;document.getElementById('combatSubtitle').textContent='You face '+combat.bossName+'.';document.getElementById('bossName').textContent=combat.bossName;const bossImg=document.getElementById('bossPortrait');bossImg.style.display='block';bossImg.src='images/boss_'+level+'.jpg';addLog('<span class="log-info">You descend into the trial. '+combat.bossName+' stirs.</span>');renderCombat()}
+function addLog(html){combat.log.unshift('<div class="combat-log-line">'+html+'</div>');if(combat.log.length>20)combat.log.pop()}
+function renderCombat(){if(!combat)return;document.getElementById('bossHpBar').style.width=Math.max(0,(combat.bossHP/combat.bossMaxHP*100))+'%';document.getElementById('bossHpText').textContent=Math.max(0,combat.bossHP)+' / '+combat.bossMaxHP+' HP';document.getElementById('playerHpBar').style.width=Math.max(0,(combat.playerHP/combat.playerMaxHP*100))+'%';document.getElementById('playerHpText').textContent=Math.max(0,combat.playerHP)+' / '+combat.playerMaxHP+' HP';document.getElementById('playerStaminaBar').style.width=(combat.playerStamina/CONFIG.staminaCap*100)+'%';document.getElementById('playerStaminaText').textContent=combat.playerStamina+' / '+CONFIG.staminaCap+' Stamina';document.getElementById('combatLog').innerHTML=combat.log.join('');const grid=document.getElementById('abilityGrid');grid.innerHTML='';ABILITIES.forEach(function(ab){if(state.level<ab.unlockLvl)return;const btn=document.createElement('button');btn.className='ability-btn';btn.disabled=combat.playerStamina<ab.cost||combat.ended;btn.innerHTML='<div class="ability-name">'+ab.name+'</div><div class="ability-cost">'+(ab.cost===0?'Free':ab.cost+' stamina')+'</div><div class="ability-desc">'+ab.desc+'</div>';btn.addEventListener('click',function(){useAbility(ab.id)});grid.appendChild(btn)});const fleeBtn=document.createElement('button');fleeBtn.className='ability-btn';fleeBtn.disabled=combat.ended;fleeBtn.innerHTML='<div class="ability-name" style="color:var(--red-light)">Flee</div><div class="ability-cost">Retreat</div><div class="ability-desc">Abandon. No reward.</div>';fleeBtn.addEventListener('click',function(){endCombat(false,true)});grid.appendChild(fleeBtn)}
+function calcPlayerDamage(stats,bossDef,mult){const critChance=Math.min(CONFIG.critChanceCap,stats.DEX*CONFIG.critChanceMult);const crit=(Math.random()*100)<critChance;let base=(stats.STR*2)+(1+Math.floor(Math.random()*Math.max(1,stats.DEX)))-bossDef;base=Math.max(1,base);let dmg=Math.floor(base*mult);if(crit)dmg=Math.floor(dmg*CONFIG.critMultiplier);return{damage:dmg,crit:crit}}
+function useAbility(abilityId){if(!combat||combat.ended)return;const ab=ABILITIES.find(a=>a.id===abilityId);if(!ab)return;if(combat.playerStamina<ab.cost)return;combat.playerStamina-=ab.cost;let dmgMult=1;let recoil=0;if(ab.effect==='power')dmgMult=2;if(ab.effect==='reckless'){dmgMult=3;recoil=20}if(combat.effects.cryTurns>0&&(ab.effect==='basic'||ab.effect==='power'||ab.effect==='reckless')){dmgMult*=1.25;combat.effects.cryTurns--}if(ab.effect==='iron'){combat.effects.ironNext=0.5;addLog('<span class="log-player">You brace yourself — your skin hardens.</span>')}else if(ab.effect==='cry'){combat.effects.cryTurns=3;addLog('<span class="log-player">You unleash a fierce battle cry!</span>')}else if(ab.effect==='unbroken'){if(!combat.effects.unbrokenUsed){combat.effects.unbrokenActive=true;combat.effects.unbrokenUsed=true;addLog('<span class="log-player">Your resolve hardens. You will not fall easily.</span>')}else{addLog('<span class="log-info">Unbroken has already been invoked.</span>');combat.playerStamina+=ab.cost}}else{const r=calcPlayerDamage(combat.stats,combat.bossDef,dmgMult);combat.bossHP-=r.damage;if(r.crit)addLog('<span class="log-crit">CRITICAL! Your '+ab.name+' deals '+r.damage+' damage!</span>');else addLog('<span class="log-player">Your '+ab.name+' hits for '+r.damage+' damage.</span>');if(recoil>0){combat.playerHP-=recoil;addLog('<span class="log-info">You take '+recoil+' recoil damage.</span>')}}if(combat.bossHP<=0){endCombat(true);return}bossTurn();renderCombat()}
+function bossTurn(){if(combat.ended||combat.bossHP<=0)return;let dmg=combat.bossDmg-Math.floor(combat.stats.VIT*CONFIG.vitDefenseFactor)-combat.stats.armor;dmg=Math.max(1,dmg);if(combat.effects.ironNext>0){dmg=Math.ceil(dmg*(1-combat.effects.ironNext));combat.effects.ironNext=0;addLog('<span class="log-dodge">Iron Skin absorbs the blow!</span>')}combat.playerHP-=dmg;addLog('<span class="log-boss">'+combat.bossName+' strikes you for '+dmg+' damage.</span>');if(combat.playerHP<=0){if(combat.effects.unbrokenActive){combat.playerHP=1;combat.effects.unbrokenActive=false;addLog('<span class="log-crit">UNBROKEN! You survive at 1 HP!</span>')}else{endCombat(false)}}}
+function endCombat(won,fled){combat.ended=true;document.getElementById('combatActions').style.display='none';let html='';if(won){const goldWin=combat.level*CONFIG.dungeonGoldMult;const xpWin=combat.level*CONFIG.dungeonXPMult;state.gold+=goldWin;state.xp+=xpWin;if(combat.level>state.dungeonsCleared)state.dungeonsCleared=combat.level;let itemDropped=null;if(state.dungeonsClearedThisWeek.indexOf(combat.level)===-1){state.dungeonsClearedThisWeek.push(combat.level);const slotId=SLOTS[Math.floor(Math.random()*SLOTS.length)].id;itemDropped=generateItem(slotId);state.inventory.push(itemDropped)}const newAbility=checkLevelUp();html='<div class="combat-result win"><div class="result-title">VICTORY</div><div style="margin-bottom:10px;font-style:italic;color:var(--text-dim);">'+combat.bossName+' falls before you.</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;"><span class="reward-chip xp">+'+xpWin+' XP</span><span class="reward-chip gold">+'+goldWin+' Gold</span></div>'+(itemDropped?'<div style="padding:10px;border:1px solid '+(itemDropped.rare?'var(--gold)':'var(--border-gold)')+';margin-bottom:10px;border-radius:1px;"><div style="font-family:Cinzel,serif;font-size:11px;color:var(--text-dim);letter-spacing:1px;">ITEM FOUND</div><div style="color:'+(itemDropped.rare?'var(--rare)':'var(--text)')+';font-size:15px;">'+itemDropped.name+'</div><div style="font-size:12px;color:var(--text-dim);margin-top:3px;">'+formatItemStats(itemDropped)+'</div></div>':'<div style="color:var(--text-dim);font-size:12px;margin-bottom:10px;font-style:italic;">No item drop — already cleared this trial this week.</div>')+'<button class="btn btn-primary" id="btnExitCombat">Leave the Depths</button></div>';saveState();if(newAbility)setTimeout(function(){showLevelUp(newAbility)},1500)}else{html='<div class="combat-result lose"><div class="result-title">'+(fled?'FLED':'DEFEAT')+'</div><div style="margin-bottom:14px;font-style:italic;color:var(--text-dim);">'+(fled?'You withdraw into the dark.':'You fall. Return stronger.')+'</div><button class="btn btn-primary" id="btnExitCombat">Return to the Surface</button></div>';saveState()}document.getElementById('combatResultArea').innerHTML=html;document.getElementById('btnExitCombat').addEventListener('click',exitCombat);renderCombat()}
+function exitCombat(){document.getElementById('combatOverlay').classList.remove('show');combat=null;renderAll()}
+function renderAll(){renderCharacter();renderQuest();renderHistory();renderDungeons();renderGear();renderInventory();renderShop();renderStats()}
+function renderStats(){const stats=getCombatStats();const gear=stats.gearRaw;const d=CONFIG.gearDampening;const critChance=Math.min(CONFIG.critChanceCap,stats.DEX*CONFIG.critChanceMult);const minDmg=Math.max(1,(stats.STR*2)+1);const maxDmg=Math.max(1,(stats.STR*2)+stats.DEX);const vitReduction=Math.floor(stats.VIT*CONFIG.vitDefenseFactor);const totalReduction=vitReduction+stats.armor;const statsPanel=document.getElementById('statsPanel');if(statsPanel){statsPanel.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:14px;"><div><div class="stat-label" style="margin-bottom:2px;">Max HP</div><div style="color:var(--red-light);font-family:Cinzel,serif;font-size:18px;">'+stats.maxHP+'</div></div><div><div class="stat-label" style="margin-bottom:2px;">Damage Range</div><div style="color:var(--text-bright);font-family:Cinzel,serif;font-size:18px;">'+minDmg+' – '+maxDmg+'</div><div style="font-size:11px;color:var(--text-dim);">before boss defense</div></div><div><div class="stat-label" style="margin-bottom:2px;">Crit Chance</div><div style="color:var(--gold-light);font-family:Cinzel,serif;font-size:18px;">'+critChance.toFixed(1)+'%</div><div style="font-size:11px;color:var(--text-dim);">×'+CONFIG.critMultiplier+' damage</div></div><div><div class="stat-label" style="margin-bottom:2px;">Damage Reduction</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:18px;">-'+totalReduction+'</div><div style="font-size:11px;color:var(--text-dim);">VIT '+vitReduction+' + armor '+stats.armor+'</div></div><div><div class="stat-label" style="margin-bottom:2px;">Stamina</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:18px;">'+state.stamina+' / '+CONFIG.staminaCap+'</div><div style="font-size:11px;color:var(--text-dim);">dungeon entry: '+CONFIG.dungeonStaminaCost+'</div></div><div><div class="stat-label" style="margin-bottom:2px;">Trials Cleared</div><div style="color:var(--gold-light);font-family:Cinzel,serif;font-size:18px;">'+state.dungeonsCleared+' / '+DUNGEON_BOSSES.length+'</div></div></div>'}const baseStatsPanel=document.getElementById('baseStatsPanel');if(baseStatsPanel){baseStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Earned through training — these are permanent.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"><div class="stat-chip"><div class="stat-chip-label">STR</div><div class="stat-chip-val">'+state.str+'</div></div><div class="stat-chip"><div class="stat-chip-label">DEX</div><div class="stat-chip-val">'+state.dex+'</div></div><div class="stat-chip"><div class="stat-chip-label">VIT</div><div class="stat-chip-val">'+state.vit+'</div></div></div>'}const gearStatsPanel=document.getElementById('gearStatsPanel');if(gearStatsPanel){const strEff=Math.floor(gear.STR*d);const dexEff=Math.floor(gear.DEX*d);const vitEff=Math.floor(gear.VIT*d);const armorEff=Math.floor(gear.armor*d);gearStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Gear bonuses are dampened by ×'+d+' so training stays meaningful. Raw values shown first, effective after dampening in green.</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:14px;"><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">Raw STR</div><div>+'+gear.STR+' → <span style="color:var(--green-light);">+'+strEff+' effective</span></div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">Raw DEX</div><div>+'+gear.DEX+' → <span style="color:var(--green-light);">+'+dexEff+' effective</span></div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">Raw VIT</div><div>+'+gear.VIT+' → <span style="color:var(--green-light);">+'+vitEff+' effective</span></div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">Raw Armor</div><div>+'+gear.armor+' → <span style="color:var(--green-light);">+'+armorEff+' effective</span></div></div></div>'}const abPanel=document.getElementById('abilitiesPanel');if(abPanel){abPanel.innerHTML=ABILITIES.map(function(ab){const unlocked=state.level>=ab.unlockLvl;return '<div style="padding:10px 0;border-bottom:1px solid var(--border);opacity:'+(unlocked?'1':'0.4')+';"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font-family:Cinzel,serif;font-size:13px;color:'+(unlocked?'var(--gold-light)':'var(--text-dim)')+';letter-spacing:1px;">'+ab.name+'</span><span style="font-size:11px;color:var(--text-dim);">'+(unlocked?(ab.cost===0?'Free':ab.cost+' stamina'):'Unlocks at Lvl '+ab.unlockLvl)+'</span></div><div style="font-size:12px;color:var(--text-dim);font-style:italic;margin-top:2px;">'+ab.desc+'</div></div>'}).join('')}}
+function renderCharacter(){const data=getLevelData(state.level);const stats=getCombatStats();document.getElementById('charName').textContent=state.name;document.getElementById('charTitle').textContent='— '+data.title+' —';document.getElementById('levelBadge').textContent='LEVEL '+state.level;const curXP=getCurrentLevelXP();const maxXP=getCurrentLevelMax();const xpPct=state.level>=LEVELS.length?100:Math.min(100,(curXP/maxXP)*100);document.getElementById('xpBar').style.width=xpPct+'%';document.getElementById('xpText').textContent=state.level>=LEVELS.length?'MAX LEVEL':curXP+' / '+maxXP+' XP';document.getElementById('staminaBar').style.width=(state.stamina/CONFIG.staminaCap*100)+'%';document.getElementById('staminaText').textContent=state.stamina+' / '+CONFIG.staminaCap;document.getElementById('strVal').textContent=stats.STR;document.getElementById('dexVal').textContent=stats.DEX;document.getElementById('vitVal').textContent=stats.VIT;const strGearBonus=stats.STR-state.str;const dexGearBonus=stats.DEX-state.dex;const vitGearBonus=stats.VIT-state.vit;document.getElementById('strBonus').textContent=strGearBonus>0?'(+'+strGearBonus+' gear)':'';document.getElementById('dexBonus').textContent=dexGearBonus>0?'(+'+dexGearBonus+' gear)':'';document.getElementById('vitBonus').textContent=vitGearBonus>0?'(+'+vitGearBonus+' gear)':'';document.getElementById('goldVal').textContent=state.gold;document.getElementById('streakVal').textContent=state.streak;document.getElementById('totalVal').textContent=state.totalSessions}
+function renderQuest(){const target=CONFIG.weeklyTarget;const done=state.weekSessions;document.getElementById('questDesc').textContent='Defeat '+state.currentWeeklyBoss+' — train '+target+' times this week.';const pips=document.getElementById('questPips');pips.innerHTML='';for(let i=0;i<target;i++){const pip=document.createElement('div');pip.className='quest-pip'+(i<done?' done':(i===done?' active':''));pip.textContent=i<done?'⚔':'○';pips.appendChild(pip)}if(state.questCompleted){document.getElementById('questReward').innerHTML='<span style="color:var(--green-light)">✦ Completed — streak '+state.streak+'</span>'}else{document.getElementById('questReward').textContent='Reward: '+CONFIG.questGoldReward+' Gold + '+CONFIG.questXPReward+' XP'}}
+function renderHistory(){const panel=document.getElementById('historyPanel');if(state.history.length===0){panel.innerHTML='<div class="empty-state">No sessions recorded yet.</div>';return}panel.innerHTML=state.history.map(function(h){return '<div class="history-entry"><div style="flex:1;min-width:0;"><div class="history-date">'+h.date+'</div><div class="history-exercises">'+h.exercises.join(' · ')+'</div></div><div class="history-xp">+'+h.xp+' XP</div></div>'}).join('')}
+function renderDungeons(){const list=document.getElementById('dungeonList');list.innerHTML='';DUNGEON_BOSSES.forEach(function(boss,i){const level=i+1;const unlocked=level<=state.dungeonsCleared+1;const cleared=level<=state.dungeonsCleared;const clearedThisWeek=state.dungeonsClearedThisWeek.indexOf(level)!==-1;const div=document.createElement('div');div.className='dungeon-item'+(!unlocked?' locked':'')+(cleared?' cleared':'');const bossHP=CONFIG.bossHpMult*level*level;const bossDmg=CONFIG.bossDmgBase+level*CONFIG.bossDmgScale;div.innerHTML='<img class="dungeon-thumb" src="images/boss_'+level+'.jpg" alt="" onerror="this.style.display=\'none\'"><div class="dungeon-info"><div class="dungeon-level-badge">TRIAL '+level+'</div><div class="dungeon-name">'+boss+'</div><div class="dungeon-meta">'+bossHP+' HP · '+bossDmg+' DMG'+(cleared?' · <span style="color:var(--green-light)">Cleared</span>':'')+(clearedThisWeek?' · <span style="color:var(--text-dim)">(no drop)</span>':'')+'</div></div><button class="btn '+(unlocked?'btn-primary':'btn-ghost')+' btn-sm" '+(!unlocked||state.stamina<CONFIG.dungeonStaminaCost?'disabled':'')+' data-enter-level="'+level+'">'+(!unlocked?'Locked':state.stamina<CONFIG.dungeonStaminaCost?'Low Stamina':'Enter')+'</button>';list.appendChild(div)});list.querySelectorAll('[data-enter-level]').forEach(function(btn){btn.addEventListener('click',function(){enterDungeon(parseInt(btn.dataset.enterLevel))})})}
+function slotIconId(slotId){if(slotId==='ring1'||slotId==='ring2')return 'icon-ring';return 'icon-'+slotId}
+function renderGear(){const grid=document.getElementById('equipGrid');grid.innerHTML='';SLOTS.forEach(function(slot){const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');const iconSvg='<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>'+(item?'<div class="slot-item-name '+(item.rare?'rare':'')+'">'+(item.rare?'<svg class="rarity-gem"><use href="#icon-gem"/></svg>':'')+item.name.replace(/^✦\s*/,'')+'</div><div class="slot-item-stats">'+formatItemStats(item)+'</div>':'<div class="slot-empty">— empty —</div>');div.addEventListener('click',function(){if(item)unequipItem(slot.id)});grid.appendChild(div)})}
+function renderInventory(){const panel=document.getElementById('inventoryList');if(state.inventory.length===0){panel.innerHTML='<div class="empty-state">Your pack is empty.</div>';return}panel.innerHTML='';state.inventory.forEach(function(item){const tier=TIERS.find(t=>t.tier===item.tier);const sellPrice=item.rare?tier.sellPrice*RARE_SELL_MULT:tier.sellPrice;const canEquip=state.level>=item.levelReq;const div=document.createElement('div');div.className='inventory-item'+(item.rare?' rare':'');const gem=item.rare?'<svg class="rarity-gem"><use href="#icon-gem"/></svg>':'';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML='<div class="inv-info"><div class="inv-name '+(item.rare?'rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><div class="inv-actions"><button class="btn btn-primary btn-sm" '+(!canEquip?'disabled':'')+' data-equip="'+item.id+'">Equip</button><button class="btn btn-ghost btn-sm" data-sell="'+item.id+'">Sell '+sellPrice+'g</button></div>';panel.appendChild(div)});panel.querySelectorAll('[data-equip]').forEach(function(b){b.addEventListener('click',function(){equipItem(b.dataset.equip)})});panel.querySelectorAll('[data-sell]').forEach(function(b){b.addEventListener('click',function(){sellItem(b.dataset.sell)})})}
+function renderShop(){const panel=document.getElementById('shopList');const refreshEl=document.getElementById('shopRefresh');const nextMonday=new Date(state.shopWeek+7*24*60*60*1000);refreshEl.textContent='Refreshes '+nextMonday.toLocaleDateString('en-GB',{day:'numeric',month:'short'});if(!state.shopStock||state.shopStock.length===0){panel.innerHTML='<div class="empty-state">Sold out! Check next Monday.</div>';return}panel.innerHTML='';state.shopStock.forEach(function(item,idx){const tier=TIERS.find(t=>t.tier===item.tier);const canAfford=state.gold>=tier.shopPrice;const canLevel=state.level>=item.levelReq;const div=document.createElement('div');div.className='shop-item';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML='<div class="inv-info"><div class="inv-name">'+item.name+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><button class="btn btn-primary btn-sm" '+(!canAfford||!canLevel?'disabled':'')+' data-buy="'+idx+'">'+tier.shopPrice+'g</button>';panel.appendChild(div)});panel.querySelectorAll('[data-buy]').forEach(function(b){b.addEventListener('click',function(){buyItem(parseInt(b.dataset.buy))})})}
+function switchTab(tabId){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active')});const tabBtn=document.querySelector('.tab[data-tab="'+tabId+'"]');const tabContent=document.getElementById('tab-'+tabId);if(tabBtn)tabBtn.classList.add('active');if(tabContent)tabContent.classList.add('active');window.scrollTo(0,0)}
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},2200)}
+function showModal(title,text,actions,withInput,inputValue){document.getElementById('modalTitle').textContent=title;document.getElementById('modalText').innerHTML=text;const input=document.getElementById('modalInput');input.style.display=withInput?'block':'none';input.value=inputValue||'';const actionsEl=document.getElementById('modalActions');actionsEl.innerHTML='';actions.forEach(function(a){const btn=document.createElement('button');btn.className='btn '+(a.primary?'btn-primary':'btn-ghost');btn.textContent=a.label;btn.addEventListener('click',function(){if(a.onClick)a.onClick(input.value);closeModal()});actionsEl.appendChild(btn)});document.getElementById('modalBackdrop').classList.add('show')}
+function closeModal(){document.getElementById('modalBackdrop').classList.remove('show')}
+function exportData(){const data=JSON.stringify(state);showModal("Export Save","Copy this and store it safely.",[{label:"Close"}],true,data)}
+function importData(){showModal("Import Save","Paste your exported save. This overwrites current progress.",[{label:"Cancel"},{label:"Import",primary:true,onClick:function(val){try{const imported=JSON.parse(val);if(imported&&typeof imported==='object'){state=migrateWeek(imported);saveState();renderAll();toast("Save imported.")}else toast("Invalid data.")}catch(e){toast("Invalid save data.")}}}],true)}
+function confirmReset(){showModal("Reset Game?","This erases ALL progress. Export first if unsure.",[{label:"Cancel"},{label:"Reset Everything",onClick:function(){localStorage.removeItem(STORAGE_KEY);state=defaultState();state.shopStock=generateShopStock();saveState();renderAll();toast("Game reset.")}}])}
+function init(){state=loadState();document.getElementById('tabBar').addEventListener('click',function(e){const tab=e.target.closest('.tab');if(tab&&tab.dataset.tab)switchTab(tab.dataset.tab)});document.getElementById('btnAddExercise').addEventListener('click',addExercise);document.getElementById('btnLogWorkout').addEventListener('click',logWorkout);document.getElementById('btnExport').addEventListener('click',exportData);document.getElementById('btnImport').addEventListener('click',importData);document.getElementById('btnReset').addEventListener('click',confirmReset);document.getElementById('btnDismissLevelUp').addEventListener('click',dismissLevelUp);document.getElementById('btnDismissReward').addEventListener('click',dismissRewardPopup);addExercise();renderAll();saveState()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+</script>
+</body>
+</html>
