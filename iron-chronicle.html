@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Iron Chronicle</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
@@ -19,6 +22,7 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Text',Georgia,s
 .header{text-align:center;padding:20px 0 14px;border-bottom:1px solid var(--border);margin-bottom:16px}
 .game-title{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--gold-light);letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 30px rgba(200,150,40,0.4)}
 .game-subtitle{font-style:italic;color:var(--text-dim);font-size:13px;margin-top:4px;letter-spacing:1px}
+.game-version{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);opacity:0.5;letter-spacing:1.5px;margin-top:6px}
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:2px;margin-bottom:12px;overflow:hidden}
 .panel-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 14px;font-family:'Cinzel',serif;font-size:11px;font-weight:600;color:var(--gold-dim);letter-spacing:2px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
 .panel-body{padding:14px}
@@ -242,6 +246,7 @@ select option{background:var(--bg2)}
 <div class="header">
 <div class="game-title">Iron Chronicle</div>
 <div class="game-subtitle">A record of iron &amp; will</div>
+<div class="game-version" id="gameVersion"></div>
 </div>
 <div class="tabs" id="tabBar">
 <button class="tab active" data-tab="main">Home</button>
@@ -301,6 +306,7 @@ select option{background:var(--bg2)}
 <div class="btn-row">
 <button class="btn btn-ghost btn-sm" id="btnExport">Export Save</button>
 <button class="btn btn-ghost btn-sm" id="btnImport">Import Save</button>
+<button class="btn btn-ghost btn-sm" id="btnForceReload" title="Bypass browser cache and fetch the latest version">Force Reload</button>
 <button class="btn btn-danger btn-sm" id="btnReset">Reset Game</button>
 </div>
 </div>
@@ -434,6 +440,7 @@ const WEEKLY_BOSSES=["the Ironhide Boar","the Stone Sentinel","the Frost Colossu
 const DUNGEON_BOSSES=["The Hollow Rat King","Stoneback Troll","Ironjaw Wolf","The Fungal Colossus","Ashbone Warlord","The Blind Sentinel","Veincracker Ogre","The Tide Horror","Duskmane Lion","The Shattered Knight","Scalehide Behemoth","The Pale Executioner","Thornwall Giant","Abyssal Lurker","The Iron Revenant","Cinderborn Drake","The Void Shepherd","Colossus of Salt","The Unmade","The Eternal Forge Guardian"];
 const ITEM_NAMES={weapon:["Blade","Axe","Hammer","Maul","Cleaver","Saber"],helmet:["Helm","Crown","Hood","Coif","Circlet","Visor"],chest:["Chestplate","Cuirass","Hauberk","Breastplate","Vest","Armor"],gloves:["Gauntlets","Grips","Handwraps","Bracers","Gloves"],belt:["Belt","Girdle","Sash","Waistguard","Cinch"],boots:["Boots","Greaves","Treads","Stompers","Sabatons"],amulet:["Amulet","Talisman","Pendant","Charm","Relic"],ring1:["Ring","Band","Signet","Loop","Circle"],ring2:["Ring","Band","Signet","Loop","Circle"],offhand:["Shield","Bulwark","Aegis","Tome","Focus","Buckler"]};
 const STORAGE_KEY="ironChronicle_v1";
+const GAME_VERSION="v0.8 · 2026-04-19";
 let state,combat=null,exerciseCounter=0,itemIdCounter=1;
 function makeItemId(){itemIdCounter++;return 'it_'+Date.now().toString(36)+'_'+itemIdCounter}
 function getWeekStart(){const d=new Date();const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);const mon=new Date(d.setDate(diff));mon.setHours(0,0,0,0);return mon.getTime()}
@@ -500,7 +507,8 @@ function exportData(){const data=JSON.stringify(state);showModal("Export Save","
 function importData(){showModal("Import Save","Paste your exported save. This overwrites current progress.",[{label:"Cancel"},{label:"Import",primary:true,onClick:function(val){try{const imported=JSON.parse(val);if(imported&&typeof imported==='object'){state=migrateWeek(imported);saveState();renderAll();toast("Save imported.")}else toast("Invalid data.")}catch(e){toast("Invalid save data.")}}}],true)}
 function confirmReset(){showModal("Reset Game?","This erases ALL progress. Export first if unsure.",[{label:"Cancel"},{label:"Reset Everything",onClick:function(){localStorage.removeItem(STORAGE_KEY);state=defaultState();state.shopStock=generateShopStock();saveState();renderAll();toast("Game reset.")}}])}
 function refreshShop(){state.shopStock=generateShopStock();saveState();renderAll();toast('Stock refreshed.')}
-function init(){try{state=loadState();document.getElementById('tabBar').addEventListener('click',function(e){const tab=e.target.closest('.tab');if(tab&&tab.dataset.tab)switchTab(tab.dataset.tab)});document.getElementById('btnAddExercise').addEventListener('click',addExercise);document.getElementById('btnLogWorkout').addEventListener('click',logWorkout);document.getElementById('btnExport').addEventListener('click',exportData);document.getElementById('btnImport').addEventListener('click',importData);document.getElementById('btnReset').addEventListener('click',confirmReset);document.getElementById('btnDismissLevelUp').addEventListener('click',dismissLevelUp);document.getElementById('btnDismissReward').addEventListener('click',dismissRewardPopup);document.getElementById('btnRefreshShop').addEventListener('click',refreshShop);addExercise();renderAll();saveState()}catch(e){document.body.innerHTML='<div style="padding:20px;color:#e8b84b;font-family:monospace;background:#0a0805;min-height:100vh;"><h2 style="margin-bottom:12px;">Error loading Iron Chronicle</h2><pre style="font-size:12px;color:#c04040;white-space:pre-wrap;">'+e.message+'</pre><p style="margin-top:12px;color:#7a6a50;">Please screenshot this and report it.</p></div>'}}
+function forceReload(){const base=location.pathname;window.location.replace(base+'?v='+Date.now())}
+function init(){try{state=loadState();document.getElementById('gameVersion').textContent=GAME_VERSION;document.getElementById('tabBar').addEventListener('click',function(e){const tab=e.target.closest('.tab');if(tab&&tab.dataset.tab)switchTab(tab.dataset.tab)});document.getElementById('btnAddExercise').addEventListener('click',addExercise);document.getElementById('btnLogWorkout').addEventListener('click',logWorkout);document.getElementById('btnExport').addEventListener('click',exportData);document.getElementById('btnImport').addEventListener('click',importData);document.getElementById('btnForceReload').addEventListener('click',forceReload);document.getElementById('btnReset').addEventListener('click',confirmReset);document.getElementById('btnDismissLevelUp').addEventListener('click',dismissLevelUp);document.getElementById('btnDismissReward').addEventListener('click',dismissRewardPopup);document.getElementById('btnRefreshShop').addEventListener('click',refreshShop);addExercise();renderAll();saveState()}catch(e){document.body.innerHTML='<div style="padding:20px;color:#e8b84b;font-family:monospace;background:#0a0805;min-height:100vh;"><h2 style="margin-bottom:12px;">Error loading Iron Chronicle</h2><pre style="font-size:12px;color:#c04040;white-space:pre-wrap;">'+e.message+'</pre><p style="margin-top:12px;color:#7a6a50;">Please screenshot this and report it.</p></div>'}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
 </body>
