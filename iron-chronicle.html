@@ -1556,9 +1556,16 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   border-radius:2px;
   pointer-events:none;
   z-index:800;
-  max-width:200px;
+  max-width:240px;
   box-shadow:0 4px 24px rgba(0,0,0,0.7);
   display:none;
+}
+.gear-tooltip-sprite {
+  display:flex;
+  justify-content:center;
+  margin-bottom:8px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
 }
 
 .gear-tooltip.show { display:block; }
@@ -1706,6 +1713,155 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 
 }
 
+/* ── Tutorial ─────────────────────────────────────────────── */
+#tutorialOverlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  z-index:1500;
+  pointer-events:none;
+}
+#tutorialOverlay.show { display:block; }
+
+#tutorialBox {
+  display:none;
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:700px;
+  z-index:1510;
+  background:var(--bg2);
+  background:linear-gradient(180deg,#1a1510 0%,#110e09 100%);
+  border-top:2px solid var(--border-gold);
+  padding:18px 20px 22px;
+  isolation:isolate;
+}
+#tutorialBox.show { display:block; }
+
+.tut-step-label {
+  font-size:11px;
+  color:var(--text-dim);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.tut-title {
+  font-family:'Cinzel',serif;
+  font-size:16px;
+  color:var(--gold-light);
+  margin-bottom:8px;
+}
+.tut-body {
+  font-size:15px;
+  color:var(--text);
+  line-height:1.6;
+  margin-bottom:14px;
+}
+.tut-actions {
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.tut-actions .btn-primary {
+  flex:1;
+  text-align:center;
+}
+.tut-skip {
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-family:'Crimson Text',Georgia,serif;
+  font-size:13px;
+  cursor:pointer;
+  padding:4px 8px;
+  text-decoration:underline;
+}
+.tut-skip:hover { color:var(--text); }
+
+#tutorialLangSelect {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.92);
+  z-index:1502;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:30px 20px;
+}
+#tutorialLangSelect.show { display:flex; }
+.lang-select-title {
+  font-family:'Cinzel',serif;
+  font-size:22px;
+  color:var(--gold-light);
+  margin-bottom:6px;
+}
+.lang-select-sub {
+  font-size:14px;
+  color:var(--text-dim);
+  margin-bottom:28px;
+  line-height:1.5;
+}
+.lang-buttons {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+  max-width:320px;
+}
+.lang-btn {
+  background:var(--bg3);
+  border:1px solid var(--border-gold);
+  color:var(--text-bright);
+  font-family:'Cinzel',serif;
+  font-size:15px;
+  padding:14px 20px;
+  cursor:pointer;
+  border-radius:2px;
+  transition:background 0.2s,border-color 0.2s;
+  letter-spacing:0.05em;
+}
+.lang-btn:hover {
+  background:var(--border-gold);
+  border-color:var(--gold-light);
+  color:var(--bg);
+}
+.lang-btn .lang-native {
+  display:block;
+  font-size:12px;
+  font-family:'Crimson Text',Georgia,serif;
+  color:var(--text-dim);
+  margin-top:2px;
+  letter-spacing:0;
+}
+.lang-btn:hover .lang-native { color:var(--bg2); }
+
+.tab.tutorial-highlight {
+  outline:2px solid var(--gold-light);
+  outline-offset:2px;
+  box-shadow:0 0 10px rgba(232,184,75,0.5);
+  position:relative;
+  z-index:1503;
+}
+
+.tut-hl {
+  outline-width:2px !important;
+  outline-style:solid !important;
+  outline-offset:3px;
+  border-radius:2px;
+  position:relative;
+  z-index:1502;
+  transition:outline-color 0.25s,box-shadow 0.25s;
+}
+
+.tp {
+  font-weight:600;
+}
+
 </style>
 </head>
 <body>
@@ -1760,28 +1916,28 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 <div class="char-name" id="charName">The Wanderer</div>
 <div class="char-title" id="charTitle">— Untested, yet unbroken —</div>
 <div class="level-badge" id="levelBadge">LEVEL 1</div>
-<div class="stats-grid">
-<div class="stat-row"><div class="stat-label">Experience</div><div class="bar-wrap"><div class="bar-fill xp" id="xpBar" style="width:0%"></div></div><div class="bar-text" id="xpText">0 / 100 XP</div></div>
-<div class="stat-row"><div class="stat-label">Stamina</div><div class="bar-wrap"><div class="bar-fill stamina" id="staminaBar" style="width:0%"></div></div><div class="bar-text" id="staminaText">0 / 100</div></div>
+<div class="stats-grid" id="statsGrid">
+<div class="stat-row" id="xpRow"><div class="stat-label">Experience</div><div class="bar-wrap"><div class="bar-fill xp" id="xpBar" style="width:0%"></div></div><div class="bar-text" id="xpText">0 / 100 XP</div></div>
+<div class="stat-row" id="staminaRow"><div class="stat-label">Stamina</div><div class="bar-wrap"><div class="bar-fill stamina" id="staminaBar" style="width:0%"></div></div><div class="bar-text" id="staminaText">0 / 100</div></div>
 </div>
-<div class="stat-chips">
+<div class="stat-chips" id="statChips">
 <div class="stat-chip"><div class="stat-chip-label">Strength</div><div class="stat-chip-val" id="strVal">1</div><div class="stat-chip-bonus" id="strBonus"></div></div>
 <div class="stat-chip"><div class="stat-chip-label">Dexterity</div><div class="stat-chip-val" id="dexVal">1</div><div class="stat-chip-bonus" id="dexBonus"></div></div>
 <div class="stat-chip"><div class="stat-chip-label">Vitality</div><div class="stat-chip-val" id="vitVal">1</div><div class="stat-chip-bonus" id="vitBonus"></div></div>
 </div>
-<div style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:4px;">
+<div id="bodyWeightRow" style="display:flex;align-items:center;gap:8px;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:4px;">
 <label style="font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap;">Body Weight</label>
 <input type="number" id="bodyWeightInput" value="75" min="30" max="300" step="0.5" style="width:70px;">
 <span style="font-size:12px;color:var(--text-dim);">kg — used for bodyweight exercises</span>
 </div>
-<div class="currency-row">
-<div class="currency"><svg class="currency-svg gold-icon"><use href="#icon-gold" xlink:href="#icon-gold"/></svg><span class="currency-val" id="goldVal">0</span><span class="currency-label">GOLD</span></div>
-<div class="currency"><svg class="currency-svg streak-icon"><use href="#icon-streak" xlink:href="#icon-streak"/></svg><span class="currency-val" id="streakVal">0</span><span class="currency-label">STREAK</span></div>
-<div class="currency"><svg class="currency-svg sessions-icon"><use href="#icon-sessions" xlink:href="#icon-sessions"/></svg><span class="currency-val" id="totalVal">0</span><span class="currency-label">SESSIONS</span></div>
+<div class="currency-row" id="currencyRow">
+<div class="currency" id="goldCurrency"><svg class="currency-svg gold-icon"><use href="#icon-gold" xlink:href="#icon-gold"/></svg><span class="currency-val" id="goldVal">0</span><span class="currency-label">GOLD</span></div>
+<div class="currency" id="streakCurrency"><svg class="currency-svg streak-icon"><use href="#icon-streak" xlink:href="#icon-streak"/></svg><span class="currency-val" id="streakVal">0</span><span class="currency-label">STREAK</span></div>
+<div class="currency" id="sessionsCurrency"><svg class="currency-svg sessions-icon"><use href="#icon-sessions" xlink:href="#icon-sessions"/></svg><span class="currency-val" id="totalVal">0</span><span class="currency-label">SESSIONS</span></div>
 </div>
 </div>
 </div>
-<div class="panel">
+<div class="panel" id="weeklyQuestPanel">
 <div class="panel-header">Weekly Quest</div>
 <div class="panel-body">
 <div class="quest-desc" id="questDesc">Train 3 times this week.</div>
@@ -1819,6 +1975,10 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 <div class="panel">
 <div class="panel-header">Abilities Unlocked</div>
 <div class="panel-body" id="abilitiesPanel"></div>
+</div>
+<div class="panel">
+<div class="panel-header">Level Progression</div>
+<div class="panel-body" id="levelsPanel"></div>
 </div>
 </div>
 <div class="tab-content" id="tab-train">
@@ -1866,7 +2026,7 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 </div>
 <div class="panel">
 <div class="panel-header">Currently Equipped</div>
-<div class="panel-body" id="shopEquipPanel" style="padding:8px 14px;"></div>
+<div class="panel-body" style="padding:8px 14px;"><div class="gear-body-wrap" id="shopEquipGrid"></div></div>
 </div>
 </div>
 <div class="tab-content" id="tab-history">
@@ -1924,6 +2084,37 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 </div>
 <div class="gear-tooltip" id="gearTooltip"></div>
 <div class="toast" id="toast"></div>
+
+<!-- Tutorial -->
+<div id="tutorialOverlay"></div>
+<div id="tutorialLangSelect">
+  <div class="lang-select-title">Iron Chronicle</div>
+  <div class="lang-select-sub" id="langSelectSub">Choose your tutorial language<br>Vyber jazyk průvodce<br>Wybierz język samouczka</div>
+  <div class="lang-buttons">
+    <button class="lang-btn" onclick="pickTutorialLang('en')">
+      English
+      <span class="lang-native">Tutorial language</span>
+    </button>
+    <button class="lang-btn" onclick="pickTutorialLang('cs')">
+      Čeština
+      <span class="lang-native">Jazyk průvodce</span>
+    </button>
+    <button class="lang-btn" onclick="pickTutorialLang('pl')">
+      Polski
+      <span class="lang-native">Język samouczka</span>
+    </button>
+  </div>
+</div>
+<div id="tutorialBox">
+  <div class="tut-step-label" id="tutStepLabel"></div>
+  <div class="tut-title" id="tutTitle"></div>
+  <div class="tut-body" id="tutBody"></div>
+  <div class="tut-actions">
+    <button class="btn btn-primary" id="tutNextBtn" onclick="nextTutorialStep()"></button>
+    <button class="tut-skip" onclick="skipTutorial()" id="tutSkipBtn"></button>
+  </div>
+</div>
+
 <script>
 // Iron Chronicle - Fitness RPG
 const CONFIG= {
@@ -2118,97 +2309,97 @@ const EXERCISES=[ {
 ];
 const LEVELS=[ {
     level:1,
-    xpNeeded:100,
+    xpNeeded:150,
     title:"Untested Wanderer"
 },
 {
     level:2,
-    xpNeeded:250,
+    xpNeeded:350,
     title:"Initiate of Iron"
 },
 {
     level:3,
-    xpNeeded:450,
+    xpNeeded:600,
     title:"Footsoldier"
 },
 {
     level:4,
-    xpNeeded:700,
+    xpNeeded:900,
     title:"Seasoned Fighter"
 },
 {
     level:5,
-    xpNeeded:1050,
+    xpNeeded:1300,
     title:"Iron-Willed Warrior"
 },
 {
     level:6,
-    xpNeeded:1500,
+    xpNeeded:1800,
     title:"Veteran of the Forge"
 },
 {
     level:7,
-    xpNeeded:2100,
+    xpNeeded:2400,
     title:"Champion of Endurance"
 },
 {
     level:8,
-    xpNeeded:2900,
+    xpNeeded:3100,
     title:"Warlord of Will"
 },
 {
     level:9,
-    xpNeeded:4000,
+    xpNeeded:3900,
     title:"Ironborn Legend"
 },
 {
     level:10,
-    xpNeeded:5500,
+    xpNeeded:5300,
     title:"The Unbroken"
 },
 {
     level:11,
-    xpNeeded:7500,
+    xpNeeded:7300,
     title:"Blood-Tested Warrior"
 },
 {
     level:12,
-    xpNeeded:10000,
+    xpNeeded:9900,
     title:"Forgeborn Destroyer"
 },
 {
     level:13,
-    xpNeeded:14000,
+    xpNeeded:13100,
     title:"Champion of the Iron Path"
 },
 {
     level:14,
-    xpNeeded:19000,
+    xpNeeded:16900,
     title:"Warden of the Deep Forge"
 },
 {
     level:15,
-    xpNeeded:26000,
+    xpNeeded:21300,
     title:"Titan of the Endless Trial"
 },
 {
     level:16,
-    xpNeeded:35000,
+    xpNeeded:26300,
     title:"The Iron-Blooded"
 },
 {
     level:17,
-    xpNeeded:47000,
+    xpNeeded:31900,
     title:"Harbinger of Ruin"
 },
 {
     level:18,
-    xpNeeded:63000,
+    xpNeeded:38100,
     title:"Colossus of Will"
 },
 {
     level:19,
-    xpNeeded:84000,
+    xpNeeded:44900,
     title:"The Undying Flame"
 },
 {
@@ -2435,7 +2626,7 @@ const NARRATIVES=["The iron does not lie. You faced the weight and did not flinc
 const WEEKLY_BOSSES=["the Ironhide Boar","the Stone Sentinel","the Frost Colossus","the Ancient Crusher","the Shadow Titan","the Hollow Knight","the Ashen Goliath","the Tide Crusher","the Bone Warden","the Pale Siege"];
 const DUNGEON_BOSSES=["The Hollow Rat King","Stoneback Troll","Ironjaw Wolf","The Fungal Colossus","Ashbone Warlord","The Blind Sentinel","Veincracker Ogre","The Tide Horror","Duskmane Lion","The Shattered Knight","Scalehide Behemoth","The Pale Executioner","Thornwall Giant","Abyssal Lurker","The Iron Revenant","Cinderborn Drake","The Void Shepherd","Colossus of Salt","The Unmade","The Eternal Forge Guardian"];
 const ITEM_NAMES= {
-    weapon:["Blade","Axe","Hammer","Maul","Cleaver","Saber"],
+    weapon:["Blade","Axe","Hammer","Maul","Cleaver","Saber","Club","Spear","Mace"],
     helmet:["Helm","Crown","Hood","Coif","Circlet","Visor"],
     chest:["Chestplate","Cuirass","Hauberk","Breastplate","Vest","Armor"],
     gloves:["Gauntlets","Grips","Handwraps","Bracers","Gloves"],
@@ -2444,7 +2635,83 @@ const ITEM_NAMES= {
     amulet:["Amulet","Talisman","Pendant","Charm","Relic"],
     ring1:["Ring","Band","Signet","Loop","Circle"],
     ring2:["Ring","Band","Signet","Loop","Circle"],
-    offhand:["Shield","Bulwark","Aegis","Tome","Focus","Buckler"]
+    offhand:["Shield","Bulwark","Aegis","Buckler","Tome","Focus","Book","Grimoire"]
+};
+// Weapon sprite sheet: images/items/weapons_grid.png — 7 cols × 6 rows, 1200×1200px
+// cat: 'sword'|'axe'|'spear'|'hammer'|'staff'
+// Weapon sprite sheets: weapons1.png + weapons2.png — each 6x6, cat: sword/axe/spear/mace/hammer/club
+const W1='images/items/weapons1.png',W2='images/items/weapons2.png';
+const WEAPON_SPRITES=[
+  {img:W1,col:0,row:0,cat:'sword'}, {img:W1,col:1,row:0,cat:'club'},  {img:W1,col:2,row:0,cat:'sword'},
+  {img:W1,col:3,row:0,cat:'axe'},   {img:W1,col:4,row:0,cat:'sword'}, {img:W1,col:5,row:0,cat:'spear'},
+  {img:W1,col:0,row:1,cat:'sword'}, {img:W1,col:1,row:1,cat:'axe'},   {img:W1,col:2,row:1,cat:'axe'},
+  {img:W1,col:3,row:1,cat:'sword'}, {img:W1,col:4,row:1,cat:'sword'}, {img:W1,col:5,row:1,cat:'mace'},
+  {img:W1,col:0,row:2,cat:'sword'}, {img:W1,col:1,row:2,cat:'mace'},  {img:W1,col:2,row:2,cat:'sword'},
+  {img:W1,col:3,row:2,cat:'spear'}, {img:W1,col:4,row:2,cat:'spear'}, {img:W1,col:5,row:2,cat:'axe'},
+  {img:W1,col:0,row:3,cat:'sword'}, {img:W1,col:1,row:3,cat:'mace'},  {img:W1,col:2,row:3,cat:'sword'},
+  {img:W1,col:3,row:3,cat:'sword'}, {img:W1,col:4,row:3,cat:'sword'}, {img:W1,col:5,row:3,cat:'axe'},
+  {img:W1,col:0,row:4,cat:'sword'}, {img:W1,col:1,row:4,cat:'axe'},   {img:W1,col:2,row:4,cat:'spear'},
+  {img:W1,col:3,row:4,cat:'sword'}, {img:W1,col:4,row:4,cat:'sword'}, {img:W1,col:5,row:4,cat:'hammer'},
+  {img:W1,col:0,row:5,cat:'sword'}, {img:W1,col:1,row:5,cat:'sword'}, {img:W1,col:2,row:5,cat:'sword'},
+  {img:W1,col:3,row:5,cat:'sword'}, {img:W1,col:4,row:5,cat:'sword'}, {img:W1,col:5,row:5,cat:'mace'},
+  {img:W2,col:0,row:0,cat:'sword'}, {img:W2,col:1,row:0,cat:'club'},  {img:W2,col:2,row:0,cat:'sword'},
+  {img:W2,col:3,row:0,cat:'axe'},   {img:W2,col:4,row:0,cat:'sword'}, {img:W2,col:5,row:0,cat:'spear'},
+  {img:W2,col:0,row:1,cat:'sword'}, {img:W2,col:1,row:1,cat:'axe'},   {img:W2,col:2,row:1,cat:'axe'},
+  {img:W2,col:3,row:1,cat:'sword'}, {img:W2,col:4,row:1,cat:'sword'}, {img:W2,col:5,row:1,cat:'mace'},
+  {img:W2,col:0,row:2,cat:'sword'}, {img:W2,col:1,row:2,cat:'sword'}, {img:W2,col:2,row:2,cat:'hammer'},
+  {img:W2,col:3,row:2,cat:'spear'}, {img:W2,col:4,row:2,cat:'spear'}, {img:W2,col:5,row:2,cat:'mace'},
+  {img:W2,col:0,row:3,cat:'sword'}, {img:W2,col:1,row:3,cat:'sword'}, {img:W2,col:2,row:3,cat:'hammer'},
+  {img:W2,col:3,row:3,cat:'axe'},   {img:W2,col:4,row:3,cat:'sword'}, {img:W2,col:5,row:3,cat:'sword'},
+  {img:W2,col:0,row:4,cat:'sword'}, {img:W2,col:1,row:4,cat:'axe'},   {img:W2,col:2,row:4,cat:'axe'},
+  {img:W2,col:3,row:4,cat:'axe'},   {img:W2,col:4,row:4,cat:'sword'}, {img:W2,col:5,row:4,cat:'sword'},
+  {img:W2,col:0,row:5,cat:'hammer'},{img:W2,col:1,row:5,cat:'sword'}, {img:W2,col:2,row:5,cat:'sword'},
+  {img:W2,col:3,row:5,cat:'spear'}, {img:W2,col:4,row:5,cat:'axe'},   {img:W2,col:5,row:5,cat:'hammer'}
+];
+const WEAPON_CAT_MAP={
+  'Blade':'sword','Saber':'sword','Cleaver':'axe','Axe':'axe',
+  'Hammer':'hammer','Maul':'hammer','Club':'club','Spear':'spear','Mace':'mace'
+};
+// Offhand sprite sheet: images/items/offhands.png — 6 cols × 6 rows, quality low→high by row
+const OFFHAND_SPRITES=[
+  {col:0,row:0,cat:'shield'}, {col:1,row:0,cat:'shield'}, {col:2,row:0,cat:'shield'},
+  {col:3,row:0,cat:'shield'}, {col:4,row:0,cat:'tome'},   {col:5,row:0,cat:'shield'},
+  {col:0,row:1,cat:'shield'}, {col:1,row:1,cat:'shield'}, {col:2,row:1,cat:'shield'},
+  {col:3,row:1,cat:'shield'}, {col:4,row:1,cat:'shield'}, {col:5,row:1,cat:'tome'},
+  {col:0,row:2,cat:'shield'}, {col:1,row:2,cat:'shield'}, {col:2,row:2,cat:'shield'},
+  {col:3,row:2,cat:'shield'}, {col:4,row:2,cat:'tome'},   {col:5,row:2,cat:'tome'},
+  {col:0,row:3,cat:'shield'}, {col:1,row:3,cat:'shield'}, {col:2,row:3,cat:'shield'},
+  {col:3,row:3,cat:'shield'}, {col:4,row:3,cat:'shield'}, {col:5,row:3,cat:'tome'},
+  {col:0,row:4,cat:'shield'}, {col:1,row:4,cat:'shield'}, {col:2,row:4,cat:'shield'},
+  {col:3,row:4,cat:'tome'},   {col:4,row:4,cat:'shield'}, {col:5,row:4,cat:'shield'},
+  {col:0,row:5,cat:'shield'}, {col:1,row:5,cat:'tome'},   {col:2,row:5,cat:'shield'},
+  {col:3,row:5,cat:'shield'}, {col:4,row:5,cat:'shield'}, {col:5,row:5,cat:'shield'}
+];
+const OFFHAND_CAT_MAP={
+  'Shield':'shield','Bulwark':'shield','Aegis':'shield','Buckler':'shield',
+  'Tome':'tome','Focus':'tome','Book':'tome','Grimoire':'tome'
+};
+// Jewelry sprite sheet: images/items/jewelery.png — 6 cols × 6 rows, quality low→high by row
+const JEWELRY_SPRITES=[
+  {col:0,row:0,cat:'ring'},   {col:1,row:0,cat:'amulet'}, {col:2,row:0,cat:'ring'},
+  {col:3,row:0,cat:'amulet'}, {col:4,row:0,cat:'ring'},   {col:5,row:0,cat:'amulet'},
+  {col:0,row:1,cat:'ring'},   {col:1,row:1,cat:'amulet'}, {col:2,row:1,cat:'amulet'},
+  {col:3,row:1,cat:'amulet'}, {col:4,row:1,cat:'ring'},   {col:5,row:1,cat:'ring'},
+  {col:0,row:2,cat:'amulet'}, {col:1,row:2,cat:'ring'},   {col:2,row:2,cat:'ring'},
+  {col:3,row:2,cat:'ring'},   {col:4,row:2,cat:'ring'},   {col:5,row:2,cat:'ring'},
+  {col:0,row:3,cat:'ring'},   {col:1,row:3,cat:'ring'},   {col:2,row:3,cat:'amulet'},
+  {col:3,row:3,cat:'ring'},   {col:4,row:3,cat:'ring'},   {col:5,row:3,cat:'ring'},
+  {col:0,row:4,cat:'ring'},   {col:1,row:4,cat:'amulet'}, {col:2,row:4,cat:'amulet'},
+  {col:3,row:4,cat:'amulet'}, {col:4,row:4,cat:'ring'},   {col:5,row:4,cat:'amulet'},
+  {col:0,row:5,cat:'amulet'}, {col:1,row:5,cat:'ring'},   {col:2,row:5,cat:'ring'},
+  {col:3,row:5,cat:'ring'},   {col:4,row:5,cat:'amulet'}, {col:5,row:5,cat:'amulet'}
+];
+// Armor sprite sheets — quality increases with row (tier mapped via Math.round formula)
+const SLOT_SPRITE_CONFIG={
+  chest: {img:'images/items/armor.png',  cols:7,rows:7},
+  helmet:{img:'images/items/helmets.png',cols:8,rows:8},
+  gloves:{img:'images/items/gloves.png', cols:8,rows:8},
+  belt:  {img:'images/items/belts.png',  cols:6,rows:6},
+  boots: {img:'images/items/boots.png',  cols:8,rows:7}
 };
 const STORAGE_KEY="ironChronicle_v1";
 const GAME_VERSION="v0.11 · 2026-04-19";
@@ -2485,8 +2752,37 @@ function defaultState() {
       dungeonsClearedThisWeek:[],
       shopStock:[],
       soundMuted:false,
-      bodyWeight:75
+      bodyWeight:75,
+      tutorialDone:false,
+      tutorialLang:null
   }
+}
+function assignItemSprite(item) {
+  if(!item||item.spriteIdx!=null)return;
+  if(item.slotId==='weapon') {
+    const nameBase=ITEM_NAMES.weapon.find(function(n){return item.name.indexOf(n)!==-1;})||'Blade';
+    const cat=WEAPON_CAT_MAP[nameBase]||'sword';
+    const opts=WEAPON_SPRITES.reduce(function(a,s,i){if(s.cat===cat)a.push(i);return a;},[]);
+    item.spriteIdx=opts[Math.floor(Math.random()*opts.length)];
+  } else if(item.slotId==='offhand') {
+    const nameBase=ITEM_NAMES.offhand.find(function(n){return item.name.indexOf(n)!==-1;})||'Shield';
+    const cat=OFFHAND_CAT_MAP[nameBase]||'shield';
+    const cands=OFFHAND_SPRITES.map(function(s,i){return{s:s,i:i};}).filter(function(x){return x.s.cat===cat;}).sort(function(a,b){return a.s.row-b.s.row||a.s.col-b.s.col;});
+    item.spriteIdx=cands[Math.round((item.tier-1)/9*(cands.length-1))].i;
+  } else if(item.slotId==='amulet'||item.slotId==='ring1'||item.slotId==='ring2') {
+    const cat=(item.slotId==='amulet')?'amulet':'ring';
+    const cands=JEWELRY_SPRITES.map(function(s,i){return{s:s,i:i};}).filter(function(x){return x.s.cat===cat;}).sort(function(a,b){return a.s.row-b.s.row||a.s.col-b.s.col;});
+    item.spriteIdx=cands[Math.round((item.tier-1)/9*(cands.length-1))].i;
+  } else if(ARMOR_SLOTS.indexOf(item.slotId)!==-1) {
+    const cfg=SLOT_SPRITE_CONFIG[item.slotId];
+    if(cfg){const row=Math.round((item.tier-1)/9*(cfg.rows-1));item.spriteIdx=row*cfg.cols+Math.floor(Math.random()*cfg.cols);}
+  }
+}
+function migrateItems(s) {
+  if(s.inventory)s.inventory.forEach(assignItemSprite);
+  if(s.equipped)Object.values(s.equipped).forEach(assignItemSprite);
+  if(s.shopStock)s.shopStock.forEach(assignItemSprite);
+  return s
 }
 function migrateWeek(s) {
   const currentWeek=getWeekStart();
@@ -2509,7 +2805,7 @@ function loadState() {
       if(s&&typeof s==='object') {
         const def=defaultState();
         for(const k in def)if(!(k in s))s[k]=def[k];
-        return migrateWeek(s)
+        return migrateItems(migrateWeek(s))
       }
     }
   } catch(e) {
@@ -2576,6 +2872,7 @@ function getCurrentLevelMax() {
   return getLevelData(state.level).xpNeeded
 }
 function checkLevelUp() {
+  const prevLevel=state.level;
   let newAbility=null;
   while(state.level<LEVELS.length) {
     const needed=getLevelData(state.level).xpNeeded;
@@ -2586,7 +2883,7 @@ function checkLevelUp() {
     }
     else break
   }
-  return newAbility
+  return {leveled:state.level>prevLevel,newAbility}
 }
 function updateExerciseForm(entryDiv) {
   const name=entryDiv.querySelector('.ex-name').value;
@@ -2740,7 +3037,7 @@ function logWorkout() {
   state.dex+=statGains.DEX;
   state.vit+=statGains.VIT;
   state.xp+=totalXP;
-  const newAbility=checkLevelUp();
+  const {leveled,newAbility}=checkLevelUp();
   state.history.unshift( {
     date:new Date().toLocaleDateString('en-GB', {
         day:'numeric',
@@ -2768,16 +3065,13 @@ function logWorkout() {
       streak:state.streak+1
   }
   );
+  if(leveled)queueRewardPopup('levelup', {ability:newAbility});
   document.getElementById('exerciseList').innerHTML='';
   exerciseCounter=0;
   addExercise();
   renderAll();
   switchTab('main');
-  if(newAbility)setTimeout(function() {
-    showLevelUp(newAbility)
-  },
-  500);
-  else setTimeout(showNextRewardPopup,400)
+  setTimeout(showNextRewardPopup,400)
 }
 function showNarrative(xp,gold,stamina,stats,questDone,questBonus) {
   const text=NARRATIVES[Math.floor(Math.random()*NARRATIVES.length)];
@@ -2829,6 +3123,10 @@ function showNextRewardPopup() {
     type,data
   }
   =rewardPopupQueue.shift();
+  if(type==='levelup') {
+    showLevelUp(data.ability);
+    return
+  }
   const titleEl=document.getElementById('rewardPopupTitle');
   const subEl=document.getElementById('rewardPopupSub');
   const bodyEl=document.getElementById('rewardPopupBody');
@@ -2886,6 +3184,23 @@ function generateItem(slotId,forceTier,forceRare,rareChance) {
   const nameBase=ITEM_NAMES[slotId][Math.floor(Math.random()*ITEM_NAMES[slotId].length)];
   const baseName=tier.name+' '+nameBase;
   const name=isRare?'✦ '+baseName:baseName;
+  let spriteIdx=null;
+  if(slotId==='weapon') {
+    const cat=WEAPON_CAT_MAP[nameBase]||'sword';
+    const opts=WEAPON_SPRITES.reduce(function(a,s,i){if(s.cat===cat)a.push(i);return a;},[]);
+    spriteIdx=opts[Math.floor(Math.random()*opts.length)];
+  } else if(slotId==='offhand') {
+    const cat=OFFHAND_CAT_MAP[nameBase]||'shield';
+    const cands=OFFHAND_SPRITES.map(function(s,i){return{s:s,i:i};}).filter(function(x){return x.s.cat===cat;}).sort(function(a,b){return a.s.row-b.s.row||a.s.col-b.s.col;});
+    spriteIdx=cands[Math.round((tier.tier-1)/9*(cands.length-1))].i;
+  } else if(slotId==='amulet'||slotId==='ring1'||slotId==='ring2') {
+    const cat=(slotId==='amulet')?'amulet':'ring';
+    const cands=JEWELRY_SPRITES.map(function(s,i){return{s:s,i:i};}).filter(function(x){return x.s.cat===cat;}).sort(function(a,b){return a.s.row-b.s.row||a.s.col-b.s.col;});
+    spriteIdx=cands[Math.round((tier.tier-1)/9*(cands.length-1))].i;
+  } else if(ARMOR_SLOTS.indexOf(slotId)!==-1) {
+    const cfg=SLOT_SPRITE_CONFIG[slotId];
+    if(cfg){const row=Math.round((tier.tier-1)/9*(cfg.rows-1));spriteIdx=row*cfg.cols+Math.floor(Math.random()*cfg.cols);}
+  }
   return {
       id:makeItemId(),
       slotId:slotId,
@@ -2895,7 +3210,8 @@ function generateItem(slotId,forceTier,forceRare,rareChance) {
       tierName:tier.name,
       levelReq:tier.levelReq,
       rare:isRare,
-      bonuses:bonuses
+      bonuses:bonuses,
+      spriteIdx:spriteIdx
   }
 }
 function formatItemStats(item) {
@@ -2903,6 +3219,49 @@ function formatItemStats(item) {
 }
 function formatItemStatsDetailed(item) {
   return formatItemStats(item)
+}
+function weaponSpriteStyle(idx,size) {
+  size=size||40;
+  const s=WEAPON_SPRITES[idx];
+  const xp=(s.col/5*100).toFixed(3);
+  const yp=(s.row/5*100).toFixed(3);
+  return 'width:'+size+'px;height:'+size+'px;background-image:url(\''+s.img+'\');background-size:600% 600%;background-position:'+xp+'% '+yp+'%;flex-shrink:0;border-radius:3px;display:inline-block;vertical-align:middle;'
+}
+function armorSpriteStyle(slotId,idx,size) {
+  size=size||40;
+  const cfg=SLOT_SPRITE_CONFIG[slotId];
+  if(!cfg)return '';
+  const col=idx%cfg.cols;
+  const row=Math.floor(idx/cfg.cols);
+  const xp=(col/(cfg.cols-1)*100).toFixed(3);
+  const yp=(row/(cfg.rows-1)*100).toFixed(3);
+  return 'width:'+size+'px;height:'+size+'px;background-image:url(\''+cfg.img+'\');background-size:'+(cfg.cols*100)+'% '+(cfg.rows*100)+'%;background-position:'+xp+'% '+yp+'%;flex-shrink:0;border-radius:3px;display:inline-block;vertical-align:middle;'
+}
+function offhandSpriteStyle(idx,size) {
+  size=size||40;
+  const s=OFFHAND_SPRITES[idx];
+  const xp=(s.col/5*100).toFixed(3);
+  const yp=(s.row/5*100).toFixed(3);
+  return 'width:'+size+'px;height:'+size+'px;background-image:url(\'images/items/offhands.png\');background-size:600% 600%;background-position:'+xp+'% '+yp+'%;flex-shrink:0;border-radius:3px;display:inline-block;vertical-align:middle;'
+}
+function jewelrySpriteStyle(idx,size) {
+  size=size||40;
+  const s=JEWELRY_SPRITES[idx];
+  const xp=(s.col/5*100).toFixed(3);
+  const yp=(s.row/5*100).toFixed(3);
+  return 'width:'+size+'px;height:'+size+'px;background-image:url(\'images/items/jewelery.png\');background-size:600% 600%;background-position:'+xp+'% '+yp+'%;flex-shrink:0;border-radius:3px;display:inline-block;vertical-align:middle;'
+}
+function getItemSpriteStyle(item,size) {
+  if(item.spriteIdx==null)return null;
+  if(item.slotId==='weapon')return weaponSpriteStyle(item.spriteIdx,size);
+  if(item.slotId==='offhand')return offhandSpriteStyle(item.spriteIdx,size);
+  if(item.slotId==='amulet'||item.slotId==='ring1'||item.slotId==='ring2')return jewelrySpriteStyle(item.spriteIdx,size);
+  if(ARMOR_SLOTS.indexOf(item.slotId)!==-1)return armorSpriteStyle(item.slotId,item.spriteIdx,size);
+  return null;
+}
+function itemSpriteHtml(item,size) {
+  const style=getItemSpriteStyle(item,size||40);
+  return style?'<div style="'+style+';margin-right:10px;"></div>':'';
 }
 function generateShopStock() {
   const stock=[];
@@ -3020,7 +3379,7 @@ function enterDungeon(level) {
   document.getElementById('bossName').textContent=combat.bossName;
   const bossImg=document.getElementById('bossPortrait');
   bossImg.style.display='block';
-  bossImg.src='images/boss_'+level+'.jpg';
+  bossImg.src='images/bosses/boss_'+level+'.jpg';
   addLog('<span class="log-info">You descend into the trial. '+combat.bossName+' stirs.</span>');
   renderCombat()
 }
@@ -3178,19 +3537,19 @@ function endCombat(won,fled) {
       state.inventory.push(item)
     }
     );
-    const newAbility=checkLevelUp();
+    const {leveled,newAbility}=checkLevelUp();
     playSound('victory');
     const anyRare=itemsDropped.some(function(item) {
       return item.rare
     }
     );
     const itemsHtml=itemsDropped.map(function(item) {
-      return '<div style="padding:6px 0;border-bottom:1px solid var(--border);"><div style="color:'+(item.rare?'var(--rare-blue)':'var(--text)')+';font-size:14px;">'+(item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'')+item.name.replace(/^✦\s*/,'')+'</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+formatItemStats(item)+'</div></div>'
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">'+itemSpriteHtml(item,40)+'<div><div style="color:'+(item.rare?'var(--rare-blue)':'var(--text)')+';font-size:14px;">'+(item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'')+item.name.replace(/^✦\s*/,'')+'</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+formatItemStats(item)+'</div></div></div>'
     }
     ).join('');
     html='<div class="combat-result win"><div class="result-title">VICTORY</div><div style="margin-bottom:10px;font-style:italic;color:var(--text-dim);">'+combat.bossName+' falls before you.</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;"><span class="reward-chip xp">+'+xpWin+' XP</span><span class="reward-chip gold">+'+goldWin+' Gold</span></div><div style="padding:10px;border:1px solid '+(anyRare?'var(--rare-blue)':'var(--border-gold)')+';margin-bottom:10px;border-radius:1px;"><div style="font-family:Cinzel,serif;font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">ITEMS FOUND ('+dropCount+')</div>'+itemsHtml+'</div><button class="btn btn-primary" id="btnExitCombat">Leave the Depths</button></div>';
     saveState();
-    if(newAbility)setTimeout(function() {
+    if(leveled)setTimeout(function() {
       showLevelUp(newAbility)
     },
     1500)
@@ -3243,6 +3602,25 @@ function renderStats() {
       const unlocked=state.level>=ab.unlockLvl;return '<div style="padding:10px 0;border-bottom:1px solid var(--border);opacity:'+(unlocked?'1':'0.4')+';"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font-family:Cinzel,serif;font-size:13px;color:'+(unlocked?'var(--gold-light)':'var(--text-dim)')+';letter-spacing:1px;">'+ab.name+'</span><span style="font-size:11px;color:var(--text-dim);">'+(unlocked?(ab.cost===0?'Free':ab.cost+' stamina'):'Unlocks at Lvl '+ab.unlockLvl)+'</span></div><div style="font-size:12px;color:var(--text-dim);font-style:italic;margin-top:2px;">'+ab.desc+'</div></div>'
     }
     ).join('')
+  }
+  const lvlPanel=document.getElementById('levelsPanel');
+  if(lvlPanel) {
+    let cumXP=0;
+    let rows='<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:0;font-size:12px;"><div style="padding:4px 8px 4px 0;color:var(--text-dim);letter-spacing:1px;font-family:Cinzel,serif;border-bottom:1px solid var(--border);">LVL</div><div style="padding:4px 8px;color:var(--text-dim);letter-spacing:1px;font-family:Cinzel,serif;border-bottom:1px solid var(--border);">TITLE</div><div style="padding:4px 8px;color:var(--text-dim);letter-spacing:1px;font-family:Cinzel,serif;border-bottom:1px solid var(--border);text-align:right;">XP NEEDED</div><div style="padding:4px 0 4px 8px;color:var(--text-dim);letter-spacing:1px;font-family:Cinzel,serif;border-bottom:1px solid var(--border);text-align:right;">TOTAL XP</div>';
+    LEVELS.forEach(function(lv,i) {
+      const isCurrent=state.level===lv.level;
+      const isPast=state.level>lv.level;
+      const isMax=lv.xpNeeded===999999;
+      const color=isCurrent?'var(--gold-light)':isPast?'var(--green-light)':'var(--text)';
+      const marker=isCurrent?' ◀':'';
+      rows+='<div style="padding:5px 8px 5px 0;border-bottom:1px solid var(--border);color:'+color+';font-family:Cinzel,serif;">'+lv.level+marker+'</div>';
+      rows+='<div style="padding:5px 8px;border-bottom:1px solid var(--border);color:'+color+';">'+lv.title+'</div>';
+      rows+='<div style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text-dim);text-align:right;">'+(isMax?'—':lv.xpNeeded.toLocaleString())+'</div>';
+      rows+='<div style="padding:5px 0 5px 8px;border-bottom:1px solid var(--border);color:var(--text-dim);text-align:right;">'+(isMax?'—':cumXP.toLocaleString())+'</div>';
+      if(!isMax)cumXP+=lv.xpNeeded
+    });
+    rows+='</div>';
+    lvlPanel.innerHTML=rows
   }
 }
 function renderCharacter() {
@@ -3308,7 +3686,7 @@ function renderDungeons() {
   const list=document.getElementById('dungeonList');
   list.innerHTML='';
   DUNGEON_BOSSES.forEach(function(boss,i) {
-    const level=i+1;const unlocked=level<=state.dungeonsCleared+1;const cleared=level<=state.dungeonsCleared;const div=document.createElement('div');div.className='dungeon-item'+(!unlocked?' locked':'')+(cleared?' cleared':'');const bossHP=CONFIG.bossHpMult*level*level;const bossDmg=CONFIG.bossDmgBase+level*level;div.innerHTML='<img class="dungeon-thumb" src="images/boss_'+level+'.jpg" alt="" onerror="this.style.display=\'none\'"><div class="dungeon-info"><div class="dungeon-level-badge">TRIAL '+level+'</div><div class="dungeon-name">'+boss+'</div><div class="dungeon-meta">'+bossHP+' HP · '+bossDmg+' DMG'+(cleared?' · <span style="color:var(--green-light)">Cleared</span>':'')+'</div></div><button class="btn '+(unlocked?'btn-primary':'btn-ghost')+' btn-sm" '+(!unlocked||state.stamina<CONFIG.dungeonStaminaCost?'disabled':'')+' data-enter-level="'+level+'">'+(!unlocked?'Locked':state.stamina<CONFIG.dungeonStaminaCost?'Low Stamina':'Enter')+'</button>';list.appendChild(div)
+    const level=i+1;const unlocked=level<=state.dungeonsCleared+1;const cleared=level<=state.dungeonsCleared;const div=document.createElement('div');div.className='dungeon-item'+(!unlocked?' locked':'')+(cleared?' cleared':'');const bossHP=CONFIG.bossHpMult*level*level;const bossDmg=CONFIG.bossDmgBase+level*level;div.innerHTML='<img class="dungeon-thumb" src="images/bosses/boss_'+level+'.jpg" alt="" onerror="this.style.display=\'none\'"><div class="dungeon-info"><div class="dungeon-level-badge">TRIAL '+level+'</div><div class="dungeon-name">'+boss+'</div><div class="dungeon-meta">'+bossHP+' HP · '+bossDmg+' DMG'+(cleared?' · <span style="color:var(--green-light)">Cleared</span>':'')+'</div></div><button class="btn '+(unlocked?'btn-primary':'btn-ghost')+' btn-sm" '+(!unlocked||state.stamina<CONFIG.dungeonStaminaCost?'disabled':'')+' data-enter-level="'+level+'">'+(!unlocked?'Locked':state.stamina<CONFIG.dungeonStaminaCost?'Low Stamina':'Enter')+'</button>';list.appendChild(div)
   }
   );
   list.querySelectorAll('[data-enter-level]').forEach(function(btn) {
@@ -3329,12 +3707,16 @@ function svgUse(id) {
 function svgUseClass(id,cls) {
   return '<svg class="'+cls+'"><use href="#'+id+'" xlink:href="#'+id+'"/></svg>'
 }
+function _itemTooltipSprite(item) {
+  const style=getItemSpriteStyle(item,80);
+  return style?'<div class="gear-tooltip-sprite"><div style="'+style+'"></div></div>':'';
+}
 function showGearTooltip(item,e) {
   const tip=document.getElementById('gearTooltip');
   const tier=TIERS.find(t=>t.tier===item.tier);
   const gem=item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'';
   const stats=Object.keys(item.bonuses).map(s=>'<div class="gear-tooltip-stat">+'+item.bonuses[s]+' '+s+'</div>').join('');
-  tip.innerHTML='<div class="gear-tooltip-name'+(item.rare?' rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="gear-tooltip-meta">'+item.slotName+' · '+tier.name+(item.rare?' · <span style="color:var(--rare-blue)">Rare</span>':'')+' · Req Lv '+item.levelReq+'</div>'+stats;
+  tip.innerHTML=_itemTooltipSprite(item)+'<div class="gear-tooltip-name'+(item.rare?' rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="gear-tooltip-meta">'+item.slotName+' · '+tier.name+(item.rare?' · <span style="color:var(--rare-blue)">Rare</span>':'')+' · Req Lv '+item.levelReq+'</div>'+stats;
   tip.classList.add('show');
   _positionGearTooltip(e)
 }
@@ -3349,9 +3731,9 @@ function showItemTooltip(item,e) {
   if(equippedItem) {
     const eGem=equippedItem.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'';
     const eStats=Object.keys(equippedItem.bonuses).map(s=>'<div class="gear-tooltip-stat">+'+equippedItem.bonuses[s]+' '+s+'</div>').join('');
-    compareHtml='<div class="gear-tooltip-divider">Equipped</div><div class="gear-tooltip-name'+(equippedItem.rare?' rare':'')+'">'+eGem+equippedItem.name.replace(/^✦\s*/,'')+'</div>'+eStats
+    compareHtml='<div class="gear-tooltip-divider">Equipped</div>'+_itemTooltipSprite(equippedItem)+'<div class="gear-tooltip-name'+(equippedItem.rare?' rare':'')+'">'+eGem+equippedItem.name.replace(/^✦\s*/,'')+'</div>'+eStats
   }
-  tip.innerHTML='<div class="gear-tooltip-name'+(item.rare?' rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="gear-tooltip-meta">'+item.slotName+' · '+tier.name+(item.rare?' · <span style="color:var(--rare-blue)">Rare</span>':'')+' · Req Lv '+item.levelReq+'</div>'+stats+compareHtml;
+  tip.innerHTML=_itemTooltipSprite(item)+'<div class="gear-tooltip-name'+(item.rare?' rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="gear-tooltip-meta">'+item.slotName+' · '+tier.name+(item.rare?' · <span style="color:var(--rare-blue)">Rare</span>':'')+' · Req Lv '+item.levelReq+'</div>'+stats+compareHtml;
   tip.classList.add('show');
   _positionGearTooltip(e)
 }
@@ -3372,7 +3754,7 @@ function renderGear() {
   const grid=document.getElementById('equipGrid');
   grid.innerHTML='';
   SLOTS.forEach(function(slot) {
-    const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');div.dataset.slot=slot.id;const iconSvg='<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>';div.addEventListener('click',function() {
+    const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');div.dataset.slot=slot.id;const _spriteStyle=item&&item.spriteIdx!=null?(slot.id==='weapon'?weaponSpriteStyle(item.spriteIdx,36):slot.id==='offhand'?offhandSpriteStyle(item.spriteIdx,36):(slot.id==='amulet'||slot.id==='ring1'||slot.id==='ring2')?jewelrySpriteStyle(item.spriteIdx,36):ARMOR_SLOTS.indexOf(slot.id)!==-1?armorSpriteStyle(slot.id,item.spriteIdx,36):null):null;const iconSvg=_spriteStyle?'<div style="'+_spriteStyle+'"></div>':'<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>';div.addEventListener('click',function() {
       if(item)unequipItem(slot.id)
     }
     );if(item) {
@@ -3393,7 +3775,7 @@ function renderInventory() {
   }
   panel.innerHTML='';
   state.inventory.forEach(function(item) {
-    const tier=TIERS.find(t=>t.tier===item.tier);const sellPrice=item.rare?tier.sellPrice*RARE_SELL_MULT:tier.sellPrice;const canEquip=state.level>=item.levelReq;const div=document.createElement('div');div.className='inventory-item'+(item.rare?' rare':'');const gem=item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML='<div class="inv-info"><div class="inv-name '+(item.rare?'rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><div class="inv-actions"><button class="btn btn-primary btn-sm" '+(!canEquip?'disabled':'')+' data-equip="'+item.id+'">Equip</button><button class="btn btn-ghost btn-sm" data-sell="'+item.id+'">Sell '+sellPrice+'g</button></div>';div.addEventListener('mouseenter',function(e) {
+    const tier=TIERS.find(t=>t.tier===item.tier);const sellPrice=item.rare?tier.sellPrice*RARE_SELL_MULT:tier.sellPrice;const canEquip=state.level>=item.levelReq;const div=document.createElement('div');div.className='inventory-item'+(item.rare?' rare':'');const gem=item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML=itemSpriteHtml(item,40)+'<div class="inv-info"><div class="inv-name '+(item.rare?'rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><div class="inv-actions"><button class="btn btn-primary btn-sm" '+(!canEquip?'disabled':'')+' data-equip="'+item.id+'">Equip</button><button class="btn btn-ghost btn-sm" data-sell="'+item.id+'">Sell '+sellPrice+'g</button></div>';div.addEventListener('mouseenter',function(e) {
       showItemTooltip(item,e)
     }
     );div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);panel.appendChild(div)
@@ -3417,14 +3799,14 @@ function renderInventory() {
 function renderShop() {
   const panel=document.getElementById('shopList');
   const goldEl=document.getElementById('shopGoldDisplay');
-  if(goldEl)goldEl.textContent='⚔ '+state.gold+' gold';
+  if(goldEl)goldEl.innerHTML='<svg class="currency-svg gold-icon" style="width:14px;height:14px;vertical-align:-3px;margin-right:3px;"><use href="#icon-gold" xlink:href="#icon-gold"/></svg>Your Gold: <strong>'+state.gold+'</strong>';
   if(!state.shopStock||state.shopStock.length===0) {
     panel.innerHTML='<div class="empty-state">Sold out! Check next Monday.</div>';
     return
   }
   panel.innerHTML='';
   state.shopStock.forEach(function(item,idx) {
-    const tier=TIERS.find(t=>t.tier===item.tier);const canAfford=state.gold>=tier.shopPrice;const canLevel=state.level>=item.levelReq;const div=document.createElement('div');div.className='shop-item';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML='<div class="inv-info"><div class="inv-name">'+item.name+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><button class="btn btn-primary btn-sm" '+(!canAfford||!canLevel?'disabled':'')+' data-buy="'+idx+'">'+tier.shopPrice+'g</button>';div.addEventListener('mouseenter',function(e) {
+    const tier=TIERS.find(t=>t.tier===item.tier);const canAfford=state.gold>=tier.shopPrice;const canLevel=state.level>=item.levelReq;const div=document.createElement('div');div.className='shop-item';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML=itemSpriteHtml(item,40)+'<div class="inv-info"><div class="inv-name">'+item.name+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><button class="btn btn-primary btn-sm" '+(!canAfford||!canLevel?'disabled':'')+' data-buy="'+idx+'">'+tier.shopPrice+'g</button>';div.addEventListener('mouseenter',function(e) {
       showItemTooltip(item,e)
     }
     );div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);panel.appendChild(div)
@@ -3437,12 +3819,12 @@ function renderShop() {
     )
   }
   );
-  const equipPanel=document.getElementById('shopEquipPanel');
-  if(equipPanel) {
-    equipPanel.innerHTML=SLOTS.map(function(slot,idx) {
-      const item=state.equipped[slot.id];const borderStyle=idx<SLOTS.length-1?'border-bottom:1px solid var(--border);':'';return'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;'+borderStyle+'"><svg class="svg-icon-sm" style="color:'+(item?'var(--gold)':'var(--text-dim)')+';flex-shrink:0;"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg><div style="width:62px;font-family:Cinzel,serif;font-size:9px;color:var(--text-dim);letter-spacing:1px;flex-shrink:0;">'+slot.name.toUpperCase()+'</div><div style="flex:1;min-width:0;overflow:hidden;">'+(item?'<span style="font-size:13px;color:'+(item.rare?'var(--rare-blue)':'var(--text)')+'">'+(item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'')+item.name.replace(/^✦\s*/,'')+'</span><span style="font-size:11px;color:var(--text-dim);"> · '+formatItemStats(item)+'</span>':'<span style="font-size:12px;color:var(--text-dim);font-style:italic;">— empty —</span>')+'</div></div>'
-    }
-    ).join('')
+  const shopEquipGrid=document.getElementById('shopEquipGrid');
+  if(shopEquipGrid) {
+    shopEquipGrid.innerHTML='';
+    SLOTS.forEach(function(slot) {
+      const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');div.dataset.slot=slot.id;const _spriteStyle=item&&item.spriteIdx!=null?(slot.id==='weapon'?weaponSpriteStyle(item.spriteIdx,36):slot.id==='offhand'?offhandSpriteStyle(item.spriteIdx,36):(slot.id==='amulet'||slot.id==='ring1'||slot.id==='ring2')?jewelrySpriteStyle(item.spriteIdx,36):ARMOR_SLOTS.indexOf(slot.id)!==-1?armorSpriteStyle(slot.id,item.spriteIdx,36):null):null;const iconSvg=_spriteStyle?'<div style="'+_spriteStyle+'"></div>':'<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>';if(item){div.addEventListener('mouseenter',function(e){showGearTooltip(item,e)});div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);}shopEquipGrid.appendChild(div);
+    });
   }
 }
 function switchTab(tabId) {
@@ -3840,13 +4222,266 @@ function init() {
     }
     addExercise();
     renderAll();
-    saveState()
+    saveState();
+    if(!state.tutorialDone) startTutorial()
   } catch(e) {
     document.body.innerHTML='<div style="padding:20px;color:#e8b84b;font-family:monospace;background:#0a0805;min-height:100vh;"><h2 style="margin-bottom:12px;">Error loading Iron Chronicle</h2><pre style="font-size:12px;color:#c04040;white-space:pre-wrap;">'+e.message+'</pre><p style="margin-top:12px;color:#7a6a50;">Please screenshot this and report it.</p></div>'
   }
 }
+
+// ── Tutorial ─────────────────────────────────────────────────
+const TUTORIAL_STEPS = [
+  {
+    tab: null,
+    highlight: [],
+    title: {
+      en: 'Welcome to Iron Chronicle',
+      cs: 'Vítejte v Iron Chronicle',
+      pl: 'Witaj w Iron Chronicle'
+    },
+    body: {
+      en: 'This fitness RPG turns your real workouts into character growth. Log your training sessions to earn XP, gold, and gear \u2014 then challenge dungeon bosses with the power you\'ve built.',
+      cs: 'Toto fitness RPG mění vaše skutečné tréninky v rozvoj postavy. Zaznamenávejte tréninkové sezony, získávejte zkušenosti, zlato a vybavení \u2014 a pak vyzývejte bossy dungeonů se silou, kterou jste vybudovali.',
+      pl: 'Ta gra RPG fitness zamienia twoje prawdziwe treningi w rozwój postaci. Loguj sesje treningowe, zdobywaj doświadczenie, złoto i ekwipunek \u2014 a potem rzucaj wyzwanie bossom lochów siłą, którą zbudowałeś.'
+    }
+  },
+  {
+    tab: 'main',
+    highlight: [
+      {id:'charName',        color:'#e8b84b'},
+      {id:'levelBadge',      color:'#7aadff'},
+      {id:'xpRow',           color:'#5ec8d8'},
+      {id:'staminaRow',      color:'#4a9b4a'},
+      {id:'statChips',       color:'#e07840'},
+      {id:'goldCurrency',    color:'#e8b84b'},
+      {id:'streakCurrency',  color:'#e07840'},
+      {id:'sessionsCurrency',color:'#4acbb0'},
+      {id:'weeklyQuestPanel',color:'#b06ad4'},
+      {id:'bodyWeightRow',   color:'#90b8c8'}
+    ],
+    title: {
+      en: 'Home \u2014 Your Character Hub',
+      cs: 'Domov \u2014 Centrum vaší postavy',
+      pl: 'Dom \u2014 Centrum twojej postaci'
+    },
+    body: {
+      en: 'Here you see your character\'s <span class="tp" style="color:#e8b84b">Name</span>, <span class="tp" style="color:#7aadff">Level</span>, <span class="tp" style="color:#5ec8d8">XP bar</span>, and <span class="tp" style="color:#4a9b4a">Stamina</span>. Your <span class="tp" style="color:#e8b84b">Gold</span>, <span class="tp" style="color:#e07840">Streak</span>, and total <span class="tp" style="color:#4acbb0">Sessions</span> sit in the currency row. The <span class="tp" style="color:#e07840">Strength / Dexterity / Vitality</span> chips grow as you train. Complete the <span class="tp" style="color:#b06ad4">Weekly Quest</span> for bonus rewards, and set your <span class="tp" style="color:#90b8c8">Body Weight</span> to calibrate XP gains.',
+      cs: 'Zde vidíte <span class="tp" style="color:#e8b84b">Jméno</span>, <span class="tp" style="color:#7aadff">Úroveň</span>, lištu <span class="tp" style="color:#5ec8d8">Zkušeností</span> a <span class="tp" style="color:#4a9b4a">Výdrž</span>. Řada měny zobrazuje <span class="tp" style="color:#e8b84b">Zlato</span>, <span class="tp" style="color:#e07840">Sérii</span> a celkový počet <span class="tp" style="color:#4acbb0">Sezón</span>. Hodnoty <span class="tp" style="color:#e07840">Síly / Obratnosti / Výdrže</span> rostou s tréninkem. Dokončete <span class="tp" style="color:#b06ad4">Týdenní úkol</span> pro bonusy a nastavte <span class="tp" style="color:#90b8c8">Tělesnou hmotnost</span> pro kalibraci zisku zkušeností.',
+      pl: 'Tutaj widzisz <span class="tp" style="color:#e8b84b">Imię</span>, <span class="tp" style="color:#7aadff">Poziom</span>, pasek <span class="tp" style="color:#5ec8d8">Doświadczenia</span> i <span class="tp" style="color:#4a9b4a">Wytrzymałość</span>. Rząd waluty pokazuje <span class="tp" style="color:#e8b84b">Złoto</span>, <span class="tp" style="color:#e07840">Serię</span> i łączną liczbę <span class="tp" style="color:#4acbb0">Sesji</span>. Wartości <span class="tp" style="color:#e07840">Siły / Zręczności / Wytrzymałości</span> rosną z treningiem. Wykonaj <span class="tp" style="color:#b06ad4">Tygodniowe Zadanie</span> po bonusy i ustaw <span class="tp" style="color:#90b8c8">Masę ciała</span>, aby skalibrować zdobywanie XP.'
+    }
+  },
+  {
+    tab: 'train',
+    highlight: [
+      {id:'exerciseList',  color:'#e07840'},
+      {id:'btnAddExercise',color:'#4acbb0'},
+      {id:'btnLogWorkout', color:'#e8b84b'}
+    ],
+    title: {
+      en: 'Train \u2014 Log Your Workouts',
+      cs: 'Trénink \u2014 Zaznamenejte své cvičení',
+      pl: 'Trening \u2014 Loguj swoje ćwiczenia'
+    },
+    body: {
+      en: 'Use <span class="tp" style="color:#4acbb0">+ Add Exercise</span> to build your session. Each <span class="tp" style="color:#e07840">exercise entry</span> has a Name selector, Weight, Reps, and Sets fields plus a Preview of what you earn. When done, hit <span class="tp" style="color:#e8b84b">Complete Session</span> to bank your XP, gold, stats and stamina.',
+      cs: 'Pomocí <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> sestavte trénink. Každý <span class="tp" style="color:#e07840">záznam cvičení</span> má výběr Názvu, pole Váhy, Opakování a Sérií a Náhled toho, co získáte. Po dokončení klepněte na <span class="tp" style="color:#e8b84b">Complete Session</span> pro získání zkušeností, zlata, statistik a výdrže.',
+      pl: 'Użyj <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span>, aby zbudować sesję. Każdy <span class="tp" style="color:#e07840">wpis ćwiczenia</span> ma selektor Nazwy, pola Ciężaru, Powtórzeń i Serii oraz Podgląd tego, co zdobędziesz. Po zakończeniu naciśnij <span class="tp" style="color:#e8b84b">Complete Session</span>, aby zainkasować XP, złoto, statystyki i wytrzymałość.'
+    }
+  },
+  {
+    tab: 'stats',
+    highlight: [
+      {id:'statsPanel',     color:'#c05050'},
+      {id:'baseStatsPanel', color:'#e07840'},
+      {id:'gearStatsPanel', color:'#7aadff'},
+      {id:'abilitiesPanel', color:'#b06ad4'}
+    ],
+    title: {
+      en: 'Stats \u2014 Your Combat Power',
+      cs: 'Statistiky \u2014 Vaše bojová síla',
+      pl: 'Statystyki \u2014 Twoja siła bojowa'
+    },
+    body: {
+      en: '<span class="tp" style="color:#c05050">Combat Stats</span> show your Max HP, Damage range, Crit chance, and Damage reduction. <span class="tp" style="color:#e07840">Base Stats</span> (Strength, Dexterity, Vitality) grow automatically from workouts. <span class="tp" style="color:#7aadff">Gear Contribution</span> shows bonuses from equipped items. <span class="tp" style="color:#b06ad4">Abilities</span> are unlocked as you level up.',
+      cs: '<span class="tp" style="color:#c05050">Bojové statistiky</span> zobrazují Max HP, rozsah Poškození, šanci na Kritický úder a Redukci poškození. <span class="tp" style="color:#e07840">Základní statistiky</span> (Síla, Obratnost, Výdrž) rostou automaticky z tréninků. <span class="tp" style="color:#7aadff">Příspěvek vybavení</span> ukazuje bonusy z vybaveného zboží. <span class="tp" style="color:#b06ad4">Schopnosti</span> se odemykají s každou úrovní.',
+      pl: '<span class="tp" style="color:#c05050">Statystyki bojowe</span> pokazują Maksymalne HP, zakres Obrażeń, szansę na Trafienie krytyczne i Redukcję obrażeń. <span class="tp" style="color:#e07840">Statystyki bazowe</span> (Siła, Zręczność, Wytrzymałość) rosną automatycznie z treningów. <span class="tp" style="color:#7aadff">Wkład ekwipunku</span> pokazuje premie z założonych przedmiotów. <span class="tp" style="color:#b06ad4">Zdolności</span> są odblokowywane wraz z awansem na poziom.'
+    }
+  },
+  {
+    tab: 'dungeons',
+    highlight: [
+      {id:'dungeonStaminaReadout', color:'#4a9b4a'},
+      {id:'dungeonList',           color:'#e07840'}
+    ],
+    title: {
+      en: 'Dungeons \u2014 Challenge the Bosses',
+      cs: 'Dungeony \u2014 Vyzývejte bossy',
+      pl: 'Lochy \u2014 Rzucaj wyzwanie bossom'
+    },
+    body: {
+      en: 'The <span class="tp" style="color:#4a9b4a">Stamina readout</span> shows your current stamina and the entry cost. The <span class="tp" style="color:#e07840">Dungeon List</span> shows all available bosses \u2014 each with a difficulty, gold reward, and loot chance. Stamina is replenished by completing workout sessions.',
+      cs: 'Ukazatel <span class="tp" style="color:#4a9b4a">Výdrže</span> zobrazuje vaši aktuální výdrž a náklady na vstup. <span class="tp" style="color:#e07840">Seznam dungeonů</span> zobrazuje všechny dostupné bossy \u2014 každý má obtížnost, odměnu v zlatě a šanci na kořist. Výdrž se doplňuje dokončením tréninkových sezón.',
+      pl: 'Wskaźnik <span class="tp" style="color:#4a9b4a">Wytrzymałości</span> pokazuje aktualną wytrzymałość i koszt wejścia. <span class="tp" style="color:#e07840">Lista Lochów</span> pokazuje wszystkich dostępnych bossów \u2014 każdy z poziomem trudności, nagrodą w złocie i szansą na łupy. Wytrzymałość uzupełnia się po zakończeniu sesji treningowych.'
+    }
+  },
+  {
+    tab: 'gear',
+    highlight: [
+      {id:'equipGrid',    color:'#7aadff'},
+      {id:'inventoryList',color:'#b06ad4'}
+    ],
+    title: {
+      en: 'Gear \u2014 Equip & Improve',
+      cs: 'Vybavení \u2014 Vybavte se a zlepšujte se',
+      pl: 'Ekwipunek \u2014 Wyposażaj się i ulepszaj'
+    },
+    body: {
+      en: 'The <span class="tp" style="color:#7aadff">Equipped grid</span> shows all gear slots \u2014 weapon, offhand, helmet, chest, gloves, belt, boots, amulet, and rings. Your <span class="tp" style="color:#b06ad4">Inventory</span> lists everything you\'ve found. Click an item to equip it. Items with a gold border are Rare and grant bigger stat bonuses.',
+      cs: 'Mřížka <span class="tp" style="color:#7aadff">Vybavení</span> zobrazuje všechny sloty \u2014 zbraň, štít, helmu, pancíř, rukavice, opasek, boty, amulet a prsteny. <span class="tp" style="color:#b06ad4">Inventář</span> obsahuje vše, co jste nalezli. Kliknutím na předmět ho vybavte. Předměty se zlatým okrajem jsou Vzácné a udělují větší bonusy.',
+      pl: 'Siatka <span class="tp" style="color:#7aadff">Ekwipunku</span> pokazuje wszystkie sloty \u2014 broń, tarczę, hełm, zbroję, rękawice, pas, buty, amulet i pierścienie. <span class="tp" style="color:#b06ad4">Inwentarz</span> zawiera wszystko, co znalazłeś. Kliknij przedmiot, aby go założyć. Przedmioty ze złotą obwódką są Rzadkie i przyznają większe premie.'
+    }
+  },
+  {
+    tab: 'shop',
+    highlight: [
+      {id:'shopList',       color:'#e07840'},
+      {id:'shopGoldDisplay',color:'#e8b84b'},
+      {id:'shopEquipGrid',  color:'#7aadff'}
+    ],
+    title: {
+      en: 'Shop \u2014 Spend Your Gold',
+      cs: 'Obchod \u2014 Utratit zlato',
+      pl: 'Sklep \u2014 Wydaj swoje złoto'
+    },
+    body: {
+      en: 'The <span class="tp" style="color:#e07840">Shop List</span> shows items available for purchase. Your current <span class="tp" style="color:#e8b84b">Gold</span> is displayed top-right. The <span class="tp" style="color:#7aadff">Currently Equipped</span> panel lets you compare before buying. Higher-tier items cost more but are significantly stronger. Stock refreshes every week.',
+      cs: '<span class="tp" style="color:#e07840">Seznam Obchodu</span> zobrazuje předměty k prodeji. Vaše aktuální <span class="tp" style="color:#e8b84b">Zlato</span> je zobrazeno vpravo nahoře. Panel <span class="tp" style="color:#7aadff">Aktuálně vybaveného</span> umožňuje porovnat před nákupem. Předměty vyšší úrovně jsou dražší, ale výrazně silnější. Zásoby se obnovují každý týden.',
+      pl: '<span class="tp" style="color:#e07840">Lista Sklepu</span> pokazuje przedmioty dostępne do zakupu. Twoje aktualne <span class="tp" style="color:#e8b84b">Złoto</span> wyświetlane jest w prawym górnym rogu. Panel <span class="tp" style="color:#7aadff">Aktualnego ekwipunku</span> pozwala porównać przed zakupem. Przedmioty wyższego poziomu kosztują więcej, ale są znacznie silniejsze. Asortyment odświeża się co tydzień.'
+    }
+  },
+  {
+    tab: 'history',
+    highlight: [
+      {id:'historyPanel', color:'#4acbb0'}
+    ],
+    title: {
+      en: 'Log \u2014 Your Chronicle',
+      cs: 'Záznamy \u2014 Vaše kronika',
+      pl: 'Dziennik \u2014 Twoja kronika'
+    },
+    body: {
+      en: 'Every completed workout session is recorded here as a <span class="tp" style="color:#4acbb0">Chronicle</span> entry \u2014 a narrative log of your effort. Review your history and let the Log remind you how far you\'ve come.',
+      cs: 'Každá dokončená tréninková sezóna je zde zaznamenána jako záznam <span class="tp" style="color:#4acbb0">Kroniky</span> \u2014 vyprávěcí záznam vašeho úsilí. Prohlédněte si historii a nechte záznamy připomínat, jak daleko jste se dostali.',
+      pl: 'Każda ukończona sesja treningowa jest tutaj zapisana jako wpis <span class="tp" style="color:#4acbb0">Kroniki</span> \u2014 narracyjny zapis twojego wysiłku. Przeglądaj historię i pozwól Dziennikowi przypominać, jak daleko zaszedłeś.'
+    }
+  },
+  {
+    tab: 'train',
+    highlight: [
+      {id:'btnAddExercise',color:'#4acbb0'},
+      {id:'btnLogWorkout', color:'#e8b84b'}
+    ],
+    title: {
+      en: 'Ready, Warrior!',
+      cs: 'Připraveni, válečníku!',
+      pl: 'Gotowy, wojowniku!'
+    },
+    body: {
+      en: 'You now know the basics of Iron Chronicle. Click <span class="tp" style="color:#4acbb0">+ Add Exercise</span> and hit <span class="tp" style="color:#e8b84b">Complete Session</span> to begin your legend. The iron awaits!',
+      cs: 'Nyní znáte základy Iron Chronicle. Klepněte na <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> a na <span class="tp" style="color:#e8b84b">Complete Session</span>, abyste zahájili svou legendu. Železo čeká!',
+      pl: 'Znasz już podstawy Iron Chronicle. Kliknij <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span> i naciśnij <span class="tp" style="color:#e8b84b">Complete Session</span>, aby rozpocząć swoją legendę. Żelazo czeka!'
+    }
+  }
+];
+
+const TUT_SKIP = { en: 'Skip Tutorial', cs: 'Přeskočit průvodce', pl: 'Pomiń samouczek' };
+const TUT_NEXT = { en: 'Next →', cs: 'Další →', pl: 'Dalej →' };
+const TUT_FINISH = { en: 'Begin!', cs: 'Začít!', pl: 'Zaczynamy!' };
+const TUT_STEP_OF = { en: 'Step', cs: 'Krok', pl: 'Krok' };
+
+let tutorialCurrentStep = 0;
+
+function startTutorial() {
+  document.getElementById('tutorialLangSelect').classList.add('show');
+}
+
+function pickTutorialLang(lang) {
+  state.tutorialLang = lang;
+  saveState();
+  document.getElementById('tutorialLangSelect').classList.remove('show');
+  tutorialCurrentStep = 0;
+  document.getElementById('tutorialOverlay').classList.add('show');
+  document.getElementById('tutorialBox').classList.add('show');
+  showTutorialStep(0);
+}
+
+function clearTutorialHighlights() {
+  document.querySelectorAll('.tab.tutorial-highlight').forEach(function(t) {
+    t.classList.remove('tutorial-highlight');
+  });
+  document.querySelectorAll('.tut-hl').forEach(function(el) {
+    el.classList.remove('tut-hl');
+    el.style.outlineColor = '';
+    el.style.boxShadow = '';
+  });
+}
+
+function showTutorialStep(i) {
+  const lang = state.tutorialLang || 'en';
+  const step = TUTORIAL_STEPS[i];
+  const total = TUTORIAL_STEPS.length;
+  const isLast = i === total - 1;
+
+  document.getElementById('tutStepLabel').textContent =
+    TUT_STEP_OF[lang] + ' ' + (i + 1) + ' / ' + total;
+  document.getElementById('tutTitle').textContent = step.title[lang];
+  document.getElementById('tutBody').innerHTML = step.body[lang];
+  document.getElementById('tutNextBtn').textContent = isLast ? TUT_FINISH[lang] : TUT_NEXT[lang];
+  document.getElementById('tutSkipBtn').textContent = TUT_SKIP[lang];
+
+  clearTutorialHighlights();
+
+  if (step.tab) {
+    switchTab(step.tab);
+    const tabBtn = document.querySelector('.tab[data-tab="' + step.tab + '"]');
+    if (tabBtn) tabBtn.classList.add('tutorial-highlight');
+  }
+
+  (step.highlight || []).forEach(function(item) {
+    const el = document.getElementById(item.id);
+    if (!el) return;
+    el.classList.add('tut-hl');
+    el.style.outlineColor = item.color;
+    el.style.boxShadow = '0 0 14px ' + item.color + '70';
+  });
+}
+
+function nextTutorialStep() {
+  tutorialCurrentStep++;
+  if (tutorialCurrentStep >= TUTORIAL_STEPS.length) {
+    endTutorial();
+  } else {
+    showTutorialStep(tutorialCurrentStep);
+  }
+}
+
+function skipTutorial() {
+  endTutorial();
+}
+
+function endTutorial() {
+  clearTutorialHighlights();
+  document.getElementById('tutorialOverlay').classList.remove('show');
+  document.getElementById('tutorialBox').classList.remove('show');
+  document.getElementById('tutorialLangSelect').classList.remove('show');
+  state.tutorialDone = true;
+  saveState();
+  switchTab('main');
+}
+
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
 else init();
 </script>
+
 </body>
 </html>
