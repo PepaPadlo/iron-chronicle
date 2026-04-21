@@ -1720,7 +1720,7 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   inset:0;
   background:rgba(0,0,0,0.55);
   z-index:1500;
-  pointer-events:none;
+  pointer-events:auto;
 }
 #tutorialOverlay.show { display:block; }
 
@@ -2115,291 +2115,103 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   </div>
 </div>
 
+<script src="config.js"></script>
+<script src="exercises.js"></script>
 <script>
 // Iron Chronicle - Fitness RPG
-const CONFIG= {
-    xpDivisor:30,
-    bodyweightMultiplier:15,
-    sessionBonusXP:20,
-    goldPerXPRatio:0.4,
-    staminaPerXPRatio:2/15,
-    staminaCap:100,
-    volumeSetsForVIT:12,
-    statGainDivisor:300,
-    vitRepThreshold:15,
-    weeklyTarget:3,
-    questGoldReward:200,
-    questXPReward:150,
-    dungeonStaminaCost:20,
-    bossHpMult:50,
-    bossDmgBase:7,
-    bossDefScale:2,
-    critChanceCoefficient:80,
-    critChanceMax:95,
-    critMultiplier:1.5,
-    vitDefenseK:50,
-    vitDefenseMax:0.75,
-    dungeonGoldMult:25,
-    dungeonXPMult:30,
-    bossRareDropChance:0.40,
-    shopRareDropChance:0.20,
-    baseHP:80,
-    hpPerVIT:8,
-    shopSize:5,
-    startingGold:50,
-    startingStamina:20
-};
-const EXERCISES=[ {
-    name:"Deadlift",
-    coeff:1.00,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Barbell Squat",
-    coeff:1.00,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Squat",
-    coeff:0.90,
-    bodyweight:true,
-    stat:"STR"
-},
-{
-    name:"Trap Bar Deadlift",
-    coeff:0.95,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Bench Press",
-    coeff:0.85,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Overhead Press",
-    coeff:0.85,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Barbell Row",
-    coeff:0.85,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Weighted Pull-up",
-    coeff:0.85,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Romanian Deadlift",
-    coeff:0.75,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Incline Bench",
-    coeff:0.75,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Dumbbell Row",
-    coeff:0.70,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Lunges",
-    coeff:0.70,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Pull-up",
-    coeff:0.80,
-    bodyweight:true,
-    stat:"DEX"
-},
-{
-    name:"Dip",
-    coeff:0.70,
-    bodyweight:true,
-    stat:"DEX"
-},
-{
-    name:"Push-up",
-    coeff:0.50,
-    bodyweight:true,
-    stat:"DEX"
-},
-{
-    name:"Ab Wheel Rollout",
-    coeff:0.65,
-    bodyweight:true,
-    stat:"DEX"
-},
-{
-    name:"Bicep Curl",
-    coeff:0.40,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Tricep Extension",
-    coeff:0.40,
-    bodyweight:false,
-    stat:"STR"
-},
-{
-    name:"Lateral Raise",
-    coeff:0.35,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Leg Curl",
-    coeff:0.45,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Leg Extension",
-    coeff:0.45,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Calf Raise",
-    coeff:0.35,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Face Pull",
-    coeff:0.40,
-    bodyweight:false,
-    stat:"DEX"
-},
-{
-    name:"Farmer's Walk",
-    coeff:0.80,
-    bodyweight:false,
-    stat:"VIT"
-},
-{
-    name:"Sled Push",
-    coeff:0.75,
-    bodyweight:false,
-    stat:"VIT"
-},
-{
-    name:"Running",
-    coeff:15,
-    bodyweight:false,
-    stat:"DEX",
-    running:true
-}
-];
 const LEVELS=[ {
     level:1,
-    xpNeeded:150,
+    xpNeeded:165,
     title:"Untested Wanderer"
 },
 {
     level:2,
-    xpNeeded:350,
+    xpNeeded:385,
     title:"Initiate of Iron"
 },
 {
     level:3,
-    xpNeeded:600,
+    xpNeeded:660,
     title:"Footsoldier"
 },
 {
     level:4,
-    xpNeeded:900,
+    xpNeeded:990,
     title:"Seasoned Fighter"
 },
 {
     level:5,
-    xpNeeded:1300,
+    xpNeeded:1430,
     title:"Iron-Willed Warrior"
 },
 {
     level:6,
-    xpNeeded:1800,
+    xpNeeded:1980,
     title:"Veteran of the Forge"
 },
 {
     level:7,
-    xpNeeded:2400,
+    xpNeeded:2640,
     title:"Champion of Endurance"
 },
 {
     level:8,
-    xpNeeded:3100,
+    xpNeeded:3410,
     title:"Warlord of Will"
 },
 {
     level:9,
-    xpNeeded:3900,
+    xpNeeded:4290,
     title:"Ironborn Legend"
 },
 {
     level:10,
-    xpNeeded:5300,
+    xpNeeded:5830,
     title:"The Unbroken"
 },
 {
     level:11,
-    xpNeeded:7300,
+    xpNeeded:8030,
     title:"Blood-Tested Warrior"
 },
 {
     level:12,
-    xpNeeded:9900,
+    xpNeeded:10890,
     title:"Forgeborn Destroyer"
 },
 {
     level:13,
-    xpNeeded:13100,
+    xpNeeded:14410,
     title:"Champion of the Iron Path"
 },
 {
     level:14,
-    xpNeeded:16900,
+    xpNeeded:18590,
     title:"Warden of the Deep Forge"
 },
 {
     level:15,
-    xpNeeded:21300,
+    xpNeeded:23430,
     title:"Titan of the Endless Trial"
 },
 {
     level:16,
-    xpNeeded:26300,
+    xpNeeded:28930,
     title:"The Iron-Blooded"
 },
 {
     level:17,
-    xpNeeded:31900,
+    xpNeeded:35090,
     title:"Harbinger of Ruin"
 },
 {
     level:18,
-    xpNeeded:38100,
+    xpNeeded:41910,
     title:"Colossus of Will"
 },
 {
     level:19,
-    xpNeeded:44900,
+    xpNeeded:49390,
     title:"The Undying Flame"
 },
 {
@@ -2851,11 +2663,17 @@ function getCombatStats() {
       gearRaw:gear
   }
 }
+function parseWeight(str) {
+  const s = String(str).replace(/\s/g, '');
+  if (!/^[\d.+\-]+$/.test(s)) return parseFloat(s) || 0;
+  return s.split(/(?=[+\-])/).reduce(function(sum, p) { return sum + (parseFloat(p) || 0); }, 0);
+}
 function calcExerciseXP(ex) {
   const exercise=EXERCISES.find(e=>e.name===ex.name);
   if(!exercise)return 0;
+  if(exercise.timed)return Math.round(ex.reps*exercise.coeff);
   if(exercise.running)return Math.round(ex.reps*exercise.coeff);
-  return Math.round(ex.weight*ex.reps*ex.sets*exercise.coeff/CONFIG.xpDivisor)
+  return Math.round(ex.weight*Math.sqrt(ex.reps)*ex.sets*exercise.coeff*exercise.difficultyCoeff/CONFIG.xpDivisor)
 }
 function getLevelData(level) {
   return LEVELS[Math.min(level-1,LEVELS.length-1)]
@@ -2893,7 +2711,12 @@ function updateExerciseForm(entryDiv) {
   const setsGroup=entryDiv.querySelector('.ex-sets-group');
   const repsLabel=entryDiv.querySelector('.ex-reps-label');
   const weightInput=entryDiv.querySelector('.ex-weight');
-  if(exercise.running) {
+  if(exercise.timed) {
+    weightGroup.style.display='none';
+    setsGroup.style.display='none';
+    repsLabel.textContent='Time (min)';
+    entryDiv.querySelector('.ex-reps').setAttribute('max','480')
+  } else if(exercise.running) {
     weightGroup.style.display='none';
     setsGroup.style.display='none';
     repsLabel.textContent='Distance (km)';
@@ -2903,7 +2726,6 @@ function updateExerciseForm(entryDiv) {
     setsGroup.style.display='';
     repsLabel.textContent='Reps';
     entryDiv.querySelector('.ex-reps').setAttribute('max','100');
-    if(exercise.bodyweight)weightInput.value=state.bodyWeight||75
   }
 }
 function addExercise() {
@@ -2912,8 +2734,8 @@ function addExercise() {
   const div=document.createElement('div');
   div.className='exercise-entry';
   div.dataset.entryId=id;
-  const options=EXERCISES.map(e=>'<option value="'+e.name+'">'+e.name+(e.bodyweight?' (BW)':e.running?' (Run)':'')+'</option>').join('');
-  div.innerHTML='<div class="exercise-entry-header"><span class="exercise-num">EXERCISE '+id+'</span><button class="remove-btn" title="Remove">✕</button></div><div class="form-row"><div class="form-group"><label>Exercise</label><select class="ex-name">'+options+'</select></div><div class="form-group ex-weight-group"><label>Weight (kg)</label><input type="number" class="ex-weight" value="60" min="0" step="2.5"></div><div class="form-group"><label class="ex-reps-label">Reps</label><input type="number" class="ex-reps" value="8" min="1" max="100"></div><div class="form-group ex-sets-group"><label>Sets</label><input type="number" class="ex-sets" value="3" min="1" max="20"></div></div><div class="xp-preview"></div>';
+  const options=EXERCISES.map(e=>'<option value="'+e.name+'">'+e.name+(e.running?' (Run)':e.timed?' (Activity)':'')+'</option>').join('');
+  div.innerHTML='<div class="exercise-entry-header"><span class="exercise-num">EXERCISE '+id+'</span><button class="remove-btn" title="Remove">✕</button></div><div class="form-row"><div class="form-group"><label>Exercise</label><select class="ex-name">'+options+'</select></div><div class="form-group ex-weight-group"><label>Weight (kg)</label><input type="text" inputmode="decimal" class="ex-weight" value="60"></div><div class="form-group"><label class="ex-reps-label">Reps</label><input type="number" class="ex-reps" value="8" min="1" max="100"></div><div class="form-group ex-sets-group"><label>Sets</label><input type="number" class="ex-sets" value="3" min="1" max="20"></div></div><div class="xp-preview"></div>';
   document.getElementById('exerciseList').appendChild(div);
   div.querySelector('.remove-btn').addEventListener('click',function() {
     div.remove()
@@ -2939,7 +2761,7 @@ function addExercise() {
 function updatePreview(entryDiv) {
   const name=entryDiv.querySelector('.ex-name').value;
   const weightEl=entryDiv.querySelector('.ex-weight');
-  const weight=parseFloat(weightEl.value)||0;
+  const weight=parseWeight(weightEl.value);
   const reps=parseInt(entryDiv.querySelector('.ex-reps').value)||0;
   const sets=parseInt(entryDiv.querySelector('.ex-sets').value)||0;
   const exercise=EXERCISES.find(e=>e.name===name);
@@ -2966,7 +2788,9 @@ function updatePreview(entryDiv) {
     if(goldGain>0)text+=' · +'+goldGain+' gold';
     if(staminaGain>0)text+=' · +'+staminaGain+' stamina';
     if(statGain>0)text+=' · +'+statGain+' '+exercise.stat;
-    if(!exercise.running&&reps>=CONFIG.vitRepThreshold&&exercise.stat!=='VIT'&&statGain>0) {
+    if(exercise.timed) {
+      if(statGain>0)text+=' · +'+statGain+' VIT';
+    } else if(!exercise.running&&!exercise.timed&&reps>=CONFIG.vitRepThreshold&&exercise.stat!=='VIT'&&statGain>0) {
       const vit=Math.max(1,Math.floor(statGain*0.3));
       text+=' · +'+vit+' VIT';
     }
@@ -2977,7 +2801,7 @@ function gatherExercises() {
   const entries=document.querySelectorAll('.exercise-entry');
   const result=[];
   entries.forEach(function(entry) {
-    const name=entry.querySelector('.ex-name').value;const exercise=EXERCISES.find(e=>e.name===name);const weight=parseFloat(entry.querySelector('.ex-weight').value)||0;const reps=parseInt(entry.querySelector('.ex-reps').value)||0;const sets=exercise&&exercise.running?1:(parseInt(entry.querySelector('.ex-sets').value)||0);if(name&&reps>0&&sets>0)result.push( {
+    const name=entry.querySelector('.ex-name').value;const exercise=EXERCISES.find(e=>e.name===name);const weight=parseWeight(entry.querySelector('.ex-weight').value);const reps=parseInt(entry.querySelector('.ex-reps').value)||0;const sets=exercise&&(exercise.running||exercise.timed)?1:(parseInt(entry.querySelector('.ex-sets').value)||0);if(name&&reps>0&&sets>0)result.push( {
         name:name,
         weight:weight,
         reps:reps,
@@ -2991,10 +2815,11 @@ function gatherExercises() {
 function calcStatGain(ex) {
   const exercise=EXERCISES.find(e=>e.name===ex.name);
   if(!exercise)return 0;
-  if(exercise.running)return Math.floor(ex.reps/5);
-  const effort=ex.weight*ex.reps*ex.sets*exercise.coeff;
-  let gain=Math.floor(effort/CONFIG.statGainDivisor);
-  if(exercise.stat==='STR')gain=Math.floor(gain/2);
+  if(exercise.timed||exercise.running){const rawGain=ex.reps*exercise.coeff/CONFIG.timedStatDivisor;return exercise.running?Math.floor(rawGain*CONFIG.statYieldRunning):Math.floor(rawGain*CONFIG.statYieldActivity);}
+  const effort=ex.weight*Math.sqrt(ex.reps)*ex.sets*exercise.coeff*exercise.difficultyCoeff;
+  const gain=Math.floor(effort/CONFIG.statGainDivisor);
+  if(exercise.stat==='STR')return Math.floor(gain*CONFIG.statYieldSTR);
+  if(exercise.stat==='DEX')return Math.floor(gain*CONFIG.statYieldDEX);
   return gain
 }
 function logWorkout() {
@@ -3011,7 +2836,9 @@ function logWorkout() {
   };
   exercises.forEach(function(ex) {
     totalXP+=calcExerciseXP(ex);const exercise=EXERCISES.find(e=>e.name===ex.name);if(exercise) {
-      const gain=calcStatGain(ex);statGains[exercise.stat]+=gain;if(ex.reps>=CONFIG.vitRepThreshold&&exercise.stat!=='VIT'&&gain>0) {
+      const gain=calcStatGain(ex);statGains[exercise.stat]+=gain;if(exercise.timed) {
+        statGains.VIT+=gain
+      } else if(!exercise.timed&&!exercise.running&&ex.reps>=CONFIG.vitRepThreshold&&exercise.stat!=='VIT'&&gain>0) {
         statGains.VIT+=Math.max(1,Math.floor(gain*0.3))
       }
     }
@@ -3044,7 +2871,7 @@ function logWorkout() {
         month:'short'
     }
     ),exercises:exercises.map(function(e) {
-      const info=EXERCISES.find(x=>x.name===e.name);if(info&&info.running)return e.name+' '+e.reps+'km';if(info&&info.bodyweight)return e.name+' '+e.sets+'×'+e.reps+'@'+e.weight+'kg';return e.name+' '+e.sets+'×'+e.reps+'@'+e.weight+'kg'
+      const info=EXERCISES.find(x=>x.name===e.name);if(info&&info.timed)return e.name+' '+e.reps+'min';if(info&&info.running)return e.name+' '+e.reps+'km';return e.name+' '+e.sets+'×'+e.reps+'@'+e.weight+'kg'
     }
     ),xp:totalXP
   }
@@ -3169,8 +2996,7 @@ function pickTierForLevel(playerLevel) {
 function generateItem(slotId,forceTier,forceRare,rareChance) {
   const slot=SLOTS.find(s=>s.id===slotId);
   const tier=forceTier||pickTierForLevel(state?state.level:1);
-  const chance=(typeof rareChance==='number')?rareChance:CONFIG.shopRareDropChance;
-  const isRare=(typeof forceRare==='boolean')?forceRare:(Math.random()<chance);
+  const isRare=(typeof forceRare==='boolean')?forceRare:(Math.random()<(rareChance||0));
   const bonuses= {
   };
   let possibleStats=slot.stats.slice();
@@ -3590,11 +3416,11 @@ function renderStats() {
   }
   const baseStatsPanel=document.getElementById('baseStatsPanel');
   if(baseStatsPanel) {
-    baseStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">Earned through training — permanent.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;"><div class="stat-chip"><div class="stat-chip-label">Strength</div><div class="stat-chip-val">'+state.str+'</div></div><div class="stat-chip"><div class="stat-chip-label">Dexterity</div><div class="stat-chip-val">'+state.dex+'</div></div><div class="stat-chip"><div class="stat-chip-label">Vitality</div><div class="stat-chip-val">'+state.vit+'</div></div></div><div style="border-top:1px solid var(--border);padding-top:12px;font-size:13px;line-height:1.7;"><div style="margin-bottom:10px;"><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">STR — Strength</span><br><span style="color:var(--text-dim);">Each point adds <b>+1 damage</b> to your attacks. Built from heavy compound lifts — deadlifts, squats, bench press, rows, presses.</span></div><div style="margin-bottom:10px;"><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">DEX — Dexterity</span><br><span style="color:var(--text-dim);">Adds damage variance (+1 to +DEX per hit) and increases critical hit chance on a curve that approaches 95% but never reaches it. Built from technical bodyweight work, pull-ups, dips, lunges, isolations.</span></div><div><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">VIT — Vitality</span><br><span style="color:var(--text-dim);">Each point adds <b>+'+CONFIG.hpPerVIT+' max HP</b> and reduces incoming damage by a percentage (VIT÷(VIT+'+CONFIG.vitDefenseK+'), capped at '+CONFIG.vitDefenseMax*100+'%). Built from VIT exercises (farmer\'s walk, sled push) <i>or</i> any set of '+CONFIG.vitRepThreshold+'+ reps (earns 30% of that exercise\'s stat as VIT bonus).</span></div></div>'
+    baseStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">Earned through training — permanent.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;"><div class="stat-chip"><div class="stat-chip-label">Strength</div><div class="stat-chip-val">'+state.str+'</div></div><div class="stat-chip"><div class="stat-chip-label">Dexterity</div><div class="stat-chip-val">'+state.dex+'</div></div><div class="stat-chip"><div class="stat-chip-label">Vitality</div><div class="stat-chip-val">'+state.vit+'</div></div></div><div style="border-top:1px solid var(--border);padding-top:12px;font-size:13px;line-height:1.7;"><div style="margin-bottom:10px;"><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">STR — Strength</span><br><span style="color:var(--text-dim);">Each point adds <b>+1 damage</b> to your attacks. Built from heavy compound lifts — deadlifts, squats, bench press, rows, presses.</span></div><div style="margin-bottom:10px;"><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">DEX — Dexterity</span><br><span style="color:var(--text-dim);">Each point adds +1 to maximum damage and increases critical hit chance on a curve that approaches 95% but never reaches it. Built from technical bodyweight work, pull-ups, dips, lunges, isolations.</span></div><div><span style="color:var(--gold-light);font-family:Cinzel,serif;letter-spacing:1px;">VIT — Vitality</span><br><span style="color:var(--text-dim);">Each point adds <b>+'+CONFIG.hpPerVIT+' max HP</b> and reduces incoming damage by a percentage (VIT÷(VIT+'+CONFIG.vitDefenseK+'), capped at '+CONFIG.vitDefenseMax*100+'%). Built from VIT exercises (farmer\'s walk, sled push) <i>or</i> any set of '+CONFIG.vitRepThreshold+'+ reps (earns 30% of that exercise\'s stat as VIT bonus).</span></div></div>'
   }
   const gearStatsPanel=document.getElementById('gearStatsPanel');
   if(gearStatsPanel) {
-    gearStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Gear bonuses add directly to your stats. What you see is what you get.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:14px;"><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">STR from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.STR+'</div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">DEX from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.DEX+'</div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">VIT from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.VIT+'</div></div></div>'
+    gearStatsPanel.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Gear bonuses add directly to your stats.</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:14px;"><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">STR from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.STR+'</div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">DEX from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.DEX+'</div></div><div style="padding:8px;background:var(--bg3);border:1px solid var(--border);"><div class="stat-label">VIT from gear</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:16px;">+'+gear.VIT+'</div></div></div>'
   }
   const abPanel=document.getElementById('abilitiesPanel');
   if(abPanel) {
@@ -3828,6 +3654,7 @@ function renderShop() {
   }
 }
 function switchTab(tabId) {
+  hideGearTooltip();
   document.querySelectorAll('.tab').forEach(function(t) {
     t.classList.remove('active')
   }
