@@ -28,6 +28,7 @@ const EXERCISES = [
   // ── Activity (timed, yields DEX + VIT) ───────────────────────────────────
   { name: "Badminton",          coeff: 2.90, stat: "DEX", timed: true },
   { name: "Volleyball",         coeff: 2.90, stat: "DEX", timed: true },
+  { name: "Squash",         coeff: 2.90, stat: "DEX", timed: true },
 
   // ── VIT ──────────────────────────────────────────────────────────────────
   { name: "Farmer's Walk",      coeff: 1.07, difficultyCoeff: 1.7, stat: "VIT" },
