@@ -2034,6 +2034,7 @@ body.tutorial-active .container { pointer-events:none; }
 <button class="btn btn-ghost btn-sm" id="btnImport">Import Save</button>
 <button class="btn btn-ghost btn-sm" id="btnForceReload" title="Bypass browser cache and fetch the latest version">Force Reload</button>
 <button class="btn btn-danger btn-sm" id="btnReset">Reset Game</button>
+<button class="btn btn-danger btn-sm" id="btnDeleteAccount" style="display:none">Delete Account</button>
 </div>
 </div>
 </div>
@@ -2176,8 +2177,8 @@ body.tutorial-active .container { pointer-events:none; }
     </div>
     <div id="welcomeAuth" style="display:none">
       <p class="welcome-desc">Sign in or create a free account.</p>
-      <input class="welcome-input" type="email" id="welcomeEmail" placeholder="Email">
-      <input class="welcome-input" type="password" id="welcomePass" placeholder="Password (min. 6 characters)">
+      <input class="welcome-input" type="text" id="welcomeName" placeholder="Character Name" autocomplete="username">
+      <input class="welcome-input" type="password" id="welcomePass" placeholder="Password (min. 6 characters)" autocomplete="current-password">
       <button class="welcome-btn primary" onclick="welcomeSignIn()">Sign In</button>
       <button class="welcome-btn" onclick="welcomeSignUp()">Create Account</button>
       <span class="welcome-back" onclick="welcomeBack()">← Back</span>
@@ -2643,20 +2644,24 @@ function initSupabase() {
 function renderAuthUI() {
   const el=document.getElementById("authSection");
   if(!el)return;
+  const delBtn=document.getElementById("btnDeleteAccount");
   if(currentUser) {
-    el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Signed in as <span style="color:var(--gold-light)">'+currentUser.email+'</span></div>'+
+    const displayName=currentUser.email.replace(/@ironchronicle\.game$/,'');
+    el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Signed in as <span style="color:var(--gold-light)">'+displayName+'</span></div>'+
       '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="manualCloudSync()">Sync Now</button><button class="btn btn-ghost btn-sm" onclick="authSignOut()">Sign Out</button></div>';
     const st=document.getElementById("saveStatusText");
     if(st)st.textContent="Progress saved locally and to cloud.";
+    if(delBtn)delBtn.style.display='';
   } else {
     el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Sign in to sync progress across devices.</div>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+
-      '<input id="authEmail" type="email" placeholder="Email" style="flex:1;min-width:140px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:13px;border-radius:2px;">'+
+      '<input id="authName" type="text" placeholder="Character Name" style="flex:1;min-width:140px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:13px;border-radius:2px;" autocomplete="username">'+
       '<input id="authPass" type="password" placeholder="Password" style="flex:1;min-width:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:13px;border-radius:2px;">'+
       '</div>'+
       '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="authSignIn()">Sign In</button><button class="btn btn-ghost btn-sm" onclick="authSignUp()">Create Account</button></div>';
     const st=document.getElementById("saveStatusText");
     if(st)st.textContent="Your progress is saved locally. Sign in to sync across devices.";
+    if(delBtn)delBtn.style.display='none';
   }
 }
 
@@ -2687,21 +2692,23 @@ async function pushCloudSave() {
 }
 
 async function authSignIn() {
-  const email=document.getElementById("authEmail")?.value?.trim();
+  const name=document.getElementById("authName")?.value?.trim();
   const pass=document.getElementById("authPass")?.value;
-  if(!email||!pass){toast("Enter email and password.");return;}
-  const {error}=await sbClient.auth.signInWithPassword({email,password:pass});
+  if(!name||!pass){toast("Enter character name and password.");return;}
+  const {error}=await sbClient.auth.signInWithPassword({email:_nameToEmail(name),password:pass});
   if(error)toast("Sign in failed: "+error.message);
 }
 
 async function authSignUp() {
-  const email=document.getElementById("authEmail")?.value?.trim();
+  const name=document.getElementById("authName")?.value?.trim();
   const pass=document.getElementById("authPass")?.value;
-  if(!email||!pass){toast("Enter email and password.");return;}
+  if(!name||!pass){toast("Enter character name and password.");return;}
   if(pass.length<6){toast("Password must be at least 6 characters.");return;}
-  const {error}=await sbClient.auth.signUp({email,password:pass});
-  if(error)toast("Sign up failed: "+error.message);
-  else toast("Account created! You can now sign in.");
+  if(!_nameToEmail(name).split('@')[0]){toast("Invalid character name.");return;}
+  const {error}=await sbClient.auth.signUp({email:_nameToEmail(name),password:pass});
+  if(error){toast(error.message.includes('already')?'Character name already taken.':'Sign up failed: '+error.message);return;}
+  state.name=name;
+  toast("Account created! You can now sign in.");
 }
 
 async function authSignOut() {
@@ -2709,11 +2716,30 @@ async function authSignOut() {
   toast("Signed out.");
 }
 
+function confirmDeleteAccount() {
+  showModal("Delete Account?","This permanently deletes your account and all cloud progress. This cannot be undone.",[
+    {label:"Cancel"},
+    {label:"Delete Forever",onClick:async function(){
+      try {
+        await sbClient.from("player_saves").delete().eq("user_id",currentUser.id);
+        await sbClient.rpc("delete_own_account");
+        await sbClient.auth.signOut();
+      } catch(e){console.error("Delete account failed",e);}
+      localStorage.removeItem(STORAGE_KEY);
+      state=defaultState();
+      state.shopStock=generateShopStock();
+      renderAll();
+      showWelcomeScreen();
+      toast("Account deleted.");
+    }}
+  ]);
+}
+
 async function manualCloudSync() {
   await pushCloudSave();
   toast("Synced to cloud.");
 }
-const GAME_VERSION="v0.11 · 2026-04-19";
+const GAME_VERSION="v0.14 · 2026-04-23";
 let state,combat=null,exerciseCounter=0,itemIdCounter=1;
 function makeItemId() {
   itemIdCounter++;
@@ -4240,6 +4266,7 @@ function init() {
     document.getElementById('btnForceReload').addEventListener('click',forceReload);
     document.addEventListener('touchstart',function(){hideGearTooltip();_tooltipTouchSource=null;},{passive:true});
     document.getElementById('btnReset').addEventListener('click',confirmReset);
+    document.getElementById('btnDeleteAccount').addEventListener('click',confirmDeleteAccount);
     document.getElementById('btnDismissLevelUp').addEventListener('click',dismissLevelUp);
     document.getElementById('btnDismissReward').addEventListener('click',dismissRewardPopup);
     document.getElementById('btnRefreshShop').addEventListener('click',refreshShop);
@@ -4299,6 +4326,10 @@ function init() {
   }
 }
 
+function _nameToEmail(name) {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]/g,'')+'@ironchronicle.game';
+}
+
 // ── Welcome Screen ───────────────────────────────────────────
 function showWelcomeScreen() {
   document.getElementById('welcomeChoose').style.display='block';
@@ -4326,21 +4357,23 @@ function welcomeBack() {
 }
 
 async function welcomeSignIn() {
-  const email=document.getElementById('welcomeEmail')?.value?.trim();
+  const name=document.getElementById('welcomeName')?.value?.trim();
   const pass=document.getElementById('welcomePass')?.value;
-  if(!email||!pass){toast('Enter email and password.');return;}
-  const {error}=await sbClient.auth.signInWithPassword({email,password:pass});
+  if(!name||!pass){toast('Enter character name and password.');return;}
+  const {error}=await sbClient.auth.signInWithPassword({email:_nameToEmail(name),password:pass});
   if(error)toast('Sign in failed: '+error.message);
 }
 
 async function welcomeSignUp() {
-  const email=document.getElementById('welcomeEmail')?.value?.trim();
+  const name=document.getElementById('welcomeName')?.value?.trim();
   const pass=document.getElementById('welcomePass')?.value;
-  if(!email||!pass){toast('Enter email and password.');return;}
+  if(!name||!pass){toast('Enter character name and password.');return;}
   if(pass.length<6){toast('Password must be at least 6 characters.');return;}
-  const {error}=await sbClient.auth.signUp({email,password:pass});
-  if(error)toast('Sign up failed: '+error.message);
-  else toast('Account created! Signing you in...');
+  if(!_nameToEmail(name).split('@')[0]){toast('Invalid character name.');return;}
+  const {error}=await sbClient.auth.signUp({email:_nameToEmail(name),password:pass});
+  if(error){toast(error.message.includes('already')?'Character name already taken.':'Sign up failed: '+error.message);return;}
+  state.name=name;
+  toast('Account created! Signing you in...');
 }
 
 // ── Tutorial ─────────────────────────────────────────────────
