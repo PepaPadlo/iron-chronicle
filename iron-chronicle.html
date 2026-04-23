@@ -1962,10 +1962,11 @@ body.tutorial-active .container { pointer-events:none; }
 </defs>
 </svg>
 <div class="container">
-<div class="header">
+<div class="header" style="position:relative;">
 <div class="game-title">Iron Chronicle</div>
 <div class="game-subtitle">A record of iron &amp; will</div>
 <div class="game-version" id="gameVersion"></div>
+<div id="headerAuth" style="position:absolute;top:0;right:0;font-size:12px;color:var(--text-dim);"></div>
 </div>
 <div class="tabs" id="tabBar">
 <button class="tab active" data-tab="main">Home</button>
@@ -2645,6 +2646,7 @@ function renderAuthUI() {
   const el=document.getElementById("authSection");
   if(!el)return;
   const delBtn=document.getElementById("btnDeleteAccount");
+  const headerAuth=document.getElementById("headerAuth");
   if(currentUser) {
     const displayName=currentUser.email.replace(/@ironchronicle\.game$/,'');
     el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Signed in as <span style="color:var(--gold-light)">'+displayName+'</span></div>'+
@@ -2652,6 +2654,7 @@ function renderAuthUI() {
     const st=document.getElementById("saveStatusText");
     if(st)st.textContent="Progress saved locally and to cloud.";
     if(delBtn)delBtn.style.display='';
+    if(headerAuth)headerAuth.innerHTML='<button onclick="authSignOut()" style="background:none;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;font-family:\'Cinzel\',serif;letter-spacing:1px;padding:4px 0;" title="Sign out">'+displayName+' · Sign Out</button>';
   } else {
     el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Sign in to sync progress across devices.</div>'+
       '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+
@@ -2662,6 +2665,7 @@ function renderAuthUI() {
     const st=document.getElementById("saveStatusText");
     if(st)st.textContent="Your progress is saved locally. Sign in to sync across devices.";
     if(delBtn)delBtn.style.display='none';
+    if(headerAuth)headerAuth.innerHTML='';
   }
 }
 
@@ -2739,7 +2743,7 @@ async function manualCloudSync() {
   await pushCloudSave();
   toast("Synced to cloud.");
 }
-const GAME_VERSION="v0.14 · 2026-04-23";
+const GAME_VERSION="v0.15 · 2026-04-23";
 let state,combat=null,exerciseCounter=0,itemIdCounter=1;
 function makeItemId() {
   itemIdCounter++;
@@ -4373,6 +4377,7 @@ async function welcomeSignUp() {
   const {error}=await sbClient.auth.signUp({email:_nameToEmail(name),password:pass});
   if(error){toast(error.message.includes('already')?'Character name already taken.':'Sign up failed: '+error.message);return;}
   state.name=name;
+  saveState();
   toast('Account created! Signing you in...');
 }
 
