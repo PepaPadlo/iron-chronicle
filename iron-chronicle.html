@@ -1794,6 +1794,84 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   padding:30px 20px;
 }
 #tutorialLangSelect.show { display:flex; }
+body.tutorial-active .container { pointer-events:none; }
+
+#welcomeScreen {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(5,3,1,0.98);
+  z-index:2000;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+  padding:30px 20px;
+}
+#welcomeScreen.show { display:flex; }
+#welcomeBox { max-width:420px;width:100%; }
+.welcome-logo {
+  font-family:'Cinzel',serif;
+  font-size:28px;
+  font-weight:900;
+  color:var(--gold-light);
+  letter-spacing:4px;
+  text-transform:uppercase;
+  text-shadow:0 0 30px rgba(200,150,40,0.4);
+  margin-bottom:8px;
+}
+.welcome-tagline {
+  font-style:italic;
+  color:var(--text-dim);
+  font-size:14px;
+  letter-spacing:1px;
+  margin-bottom:36px;
+}
+.welcome-desc {
+  color:var(--text);
+  font-size:15px;
+  margin-bottom:24px;
+  line-height:1.6;
+}
+.welcome-btn {
+  display:block;
+  width:100%;
+  padding:12px 20px;
+  margin-bottom:10px;
+  font-family:'Cinzel',serif;
+  font-size:13px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  cursor:pointer;
+  border-radius:2px;
+  border:1px solid var(--border-gold);
+  background:var(--bg3);
+  color:var(--gold-light);
+  transition:background 0.2s;
+}
+.welcome-btn:hover { background:#1e1a12; }
+.welcome-btn.primary { background:var(--gold-dim);border-color:var(--gold); }
+.welcome-btn.primary:hover { background:#8a6020; }
+.welcome-input {
+  display:block;
+  width:100%;
+  padding:9px 12px;
+  margin-bottom:8px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:14px;
+  border-radius:2px;
+  font-family:'Crimson Text',Georgia,serif;
+}
+.welcome-back {
+  display:inline-block;
+  margin-top:10px;
+  color:var(--text-dim);
+  font-size:13px;
+  cursor:pointer;
+  text-decoration:underline;
+}
 .lang-select-title {
   font-family:'Cinzel',serif;
   font-size:22px;
@@ -2085,6 +2163,27 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 </div>
 <div class="gear-tooltip" id="gearTooltip"></div>
 <div class="toast" id="toast"></div>
+
+<!-- Welcome Screen -->
+<div id="welcomeScreen">
+  <div id="welcomeBox">
+    <div class="welcome-logo">Iron Chronicle</div>
+    <div class="welcome-tagline">Your training. Your legend.</div>
+    <div id="welcomeChoose">
+      <p class="welcome-desc">Sign in to keep your progress and play across devices — or play locally on this device only.</p>
+      <button class="welcome-btn primary" onclick="welcomeShowAuth()">Sign In / Create Account</button>
+      <button class="welcome-btn" onclick="welcomePlayLocal()">Play Locally</button>
+    </div>
+    <div id="welcomeAuth" style="display:none">
+      <p class="welcome-desc">Sign in or create a free account.</p>
+      <input class="welcome-input" type="email" id="welcomeEmail" placeholder="Email">
+      <input class="welcome-input" type="password" id="welcomePass" placeholder="Password (min. 6 characters)">
+      <button class="welcome-btn primary" onclick="welcomeSignIn()">Sign In</button>
+      <button class="welcome-btn" onclick="welcomeSignUp()">Create Account</button>
+      <span class="welcome-back" onclick="welcomeBack()">← Back</span>
+    </div>
+  </div>
+</div>
 
 <!-- Tutorial -->
 <div id="tutorialOverlay"></div>
@@ -4105,29 +4204,9 @@ function triggerCryActivate(playerEl) {
 function init() {
   try {
     initSupabase();
+    const hasLocalSave=!!localStorage.getItem(STORAGE_KEY);
     state=loadState();
     renderAuthUI();
-    if(sbClient) {
-      sbClient.auth.getSession().then(function({data:{session}}) {
-        currentUser=session?.user??null;
-        renderAuthUI();
-        if(currentUser) {
-          loadCloudSave().then(function(cloudState) {
-            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();}
-          });
-        }
-      });
-      sbClient.auth.onAuthStateChange(function(event,session) {
-        currentUser=session?.user??null;
-        renderAuthUI();
-        if(event==="SIGNED_IN") {
-          loadCloudSave().then(function(cloudState) {
-            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();toast("Cloud save loaded.");}
-            else{pushCloudSave();toast("Signed in. Local save uploaded to cloud.");}
-          });
-        }
-      });
-    }
     document.getElementById('gameVersion').textContent=GAME_VERSION;
     document.getElementById('tabBar').addEventListener('click',function(e) {
       const tab=e.target.closest('.tab');if(tab&&tab.dataset.tab)switchTab(tab.dataset.tab)
@@ -4162,10 +4241,84 @@ function init() {
     addExercise();
     renderAll();
     saveState();
-    if(!state.tutorialDone) startTutorial()
+    if(sbClient) {
+      sbClient.auth.getSession().then(function({data:{session}}) {
+        currentUser=session?.user??null;
+        renderAuthUI();
+        if(currentUser) {
+          loadCloudSave().then(function(cloudState) {
+            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();}
+            document.getElementById('welcomeScreen').classList.remove('show');
+            if(!state.tutorialDone) startTutorial();
+          });
+        } else if(!hasLocalSave) {
+          showWelcomeScreen();
+        } else {
+          if(!state.tutorialDone) startTutorial();
+        }
+      });
+      sbClient.auth.onAuthStateChange(function(event,session) {
+        currentUser=session?.user??null;
+        renderAuthUI();
+        if(event==="SIGNED_IN") {
+          loadCloudSave().then(function(cloudState) {
+            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();toast("Cloud save loaded.");}
+            else{pushCloudSave();toast("Signed in.");}
+            dismissWelcomeScreen();
+          });
+        }
+      });
+    } else {
+      if(!hasLocalSave) showWelcomeScreen();
+      else if(!state.tutorialDone) startTutorial();
+    }
   } catch(e) {
     document.body.innerHTML='<div style="padding:20px;color:#e8b84b;font-family:monospace;background:#0a0805;min-height:100vh;"><h2 style="margin-bottom:12px;">Error loading Iron Chronicle</h2><pre style="font-size:12px;color:#c04040;white-space:pre-wrap;">'+e.message+'</pre><p style="margin-top:12px;color:#7a6a50;">Please screenshot this and report it.</p></div>'
   }
+}
+
+// ── Welcome Screen ───────────────────────────────────────────
+function showWelcomeScreen() {
+  document.getElementById('welcomeChoose').style.display='block';
+  document.getElementById('welcomeAuth').style.display='none';
+  document.getElementById('welcomeScreen').classList.add('show');
+}
+
+function dismissWelcomeScreen() {
+  document.getElementById('welcomeScreen').classList.remove('show');
+  if(!state.tutorialDone) startTutorial();
+}
+
+function welcomePlayLocal() {
+  dismissWelcomeScreen();
+}
+
+function welcomeShowAuth() {
+  document.getElementById('welcomeChoose').style.display='none';
+  document.getElementById('welcomeAuth').style.display='block';
+}
+
+function welcomeBack() {
+  document.getElementById('welcomeAuth').style.display='none';
+  document.getElementById('welcomeChoose').style.display='block';
+}
+
+async function welcomeSignIn() {
+  const email=document.getElementById('welcomeEmail')?.value?.trim();
+  const pass=document.getElementById('welcomePass')?.value;
+  if(!email||!pass){toast('Enter email and password.');return;}
+  const {error}=await sbClient.auth.signInWithPassword({email,password:pass});
+  if(error)toast('Sign in failed: '+error.message);
+}
+
+async function welcomeSignUp() {
+  const email=document.getElementById('welcomeEmail')?.value?.trim();
+  const pass=document.getElementById('welcomePass')?.value;
+  if(!email||!pass){toast('Enter email and password.');return;}
+  if(pass.length<6){toast('Password must be at least 6 characters.');return;}
+  const {error}=await sbClient.auth.signUp({email,password:pass});
+  if(error)toast('Sign up failed: '+error.message);
+  else toast('Account created! Signing you in...');
 }
 
 // ── Tutorial ─────────────────────────────────────────────────
@@ -4341,6 +4494,7 @@ const TUT_STEP_OF = { en: 'Step', cs: 'Krok', pl: 'Krok' };
 let tutorialCurrentStep = 0;
 
 function startTutorial() {
+  document.body.classList.add('tutorial-active');
   document.getElementById('tutorialLangSelect').classList.add('show');
 }
 
@@ -4413,6 +4567,7 @@ function endTutorial() {
   document.getElementById('tutorialOverlay').classList.remove('show');
   document.getElementById('tutorialBox').classList.remove('show');
   document.getElementById('tutorialLangSelect').classList.remove('show');
+  document.body.classList.remove('tutorial-active');
   state.tutorialDone = true;
   saveState();
   switchTab('main');
