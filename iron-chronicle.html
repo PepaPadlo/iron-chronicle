@@ -3761,6 +3761,30 @@ function _positionGearTooltip(e) {
   tip.style.left=x+'px';
   tip.style.top=y+'px'
 }
+function _positionGearTooltipAtElement(el) {
+  const tip=document.getElementById('gearTooltip');
+  const rect=el.getBoundingClientRect();
+  const tipW=tip.offsetWidth;
+  const tipH=tip.offsetHeight;
+  let x=Math.max(8,Math.min(window.innerWidth/2-tipW/2,window.innerWidth-tipW-8));
+  let y=rect.top-tipH-10;
+  if(y<8)y=rect.bottom+10;
+  tip.style.left=x+'px';
+  tip.style.top=y+'px';
+}
+let _lastTouchTime=0;
+let _tooltipTouchSource=null;
+function _addTooltipListeners(div,showFn) {
+  div.addEventListener('mouseenter',function(e){if(Date.now()-_lastTouchTime<500)return;showFn(e);});
+  div.addEventListener('mousemove',function(e){if(Date.now()-_lastTouchTime<500)return;_positionGearTooltip(e);});
+  div.addEventListener('mouseleave',function(){if(Date.now()-_lastTouchTime<500)return;hideGearTooltip();});
+  div.addEventListener('touchstart',function(e){
+    _lastTouchTime=Date.now();
+    e.stopPropagation();
+    if(_tooltipTouchSource===div){hideGearTooltip();_tooltipTouchSource=null;}
+    else{const t=e.touches[0];showFn({clientX:t.clientX,clientY:t.clientY});_positionGearTooltipAtElement(div);_tooltipTouchSource=div;}
+  });
+}
 function hideGearTooltip() {
   document.getElementById('gearTooltip').classList.remove('show')
 }
@@ -3772,10 +3796,7 @@ function renderGear() {
       if(item)unequipItem(slot.id)
     }
     );if(item) {
-      div.addEventListener('mouseenter',function(e) {
-        showGearTooltip(item,e)
-      }
-      );div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip)
+      _addTooltipListeners(div,function(e){showGearTooltip(item,e);});
     }
     grid.appendChild(div)
   }
@@ -3792,7 +3813,7 @@ function renderInventory() {
     const tier=TIERS.find(t=>t.tier===item.tier);const sellPrice=item.rare?tier.sellPrice*RARE_SELL_MULT:tier.sellPrice;const canEquip=state.level>=item.levelReq;const div=document.createElement('div');div.className='inventory-item'+(item.rare?' rare':'');const gem=item.rare?'<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>':'';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML=itemSpriteHtml(item,40)+'<div class="inv-info"><div class="inv-name '+(item.rare?'rare':'')+'">'+gem+item.name.replace(/^✦\s*/,'')+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><div class="inv-actions"><button class="btn btn-primary btn-sm" '+(!canEquip?'disabled':'')+' data-equip="'+item.id+'">Equip</button><button class="btn btn-ghost btn-sm" data-sell="'+item.id+'">Sell '+sellPrice+'g</button></div>';div.addEventListener('mouseenter',function(e) {
       showItemTooltip(item,e)
     }
-    );div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);panel.appendChild(div)
+    );_addTooltipListeners(div,function(e){showItemTooltip(item,e);});panel.appendChild(div)
   }
   );
   panel.querySelectorAll('[data-equip]').forEach(function(b) {
@@ -3823,7 +3844,7 @@ function renderShop() {
     const tier=TIERS.find(t=>t.tier===item.tier);const canAfford=state.gold>=tier.shopPrice;const canLevel=state.level>=item.levelReq;const div=document.createElement('div');div.className='shop-item';const slotIcon='<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#'+slotIconId(item.slotId)+'" xlink:href="#'+slotIconId(item.slotId)+'"/></svg>';div.innerHTML=itemSpriteHtml(item,40)+'<div class="inv-info"><div class="inv-name">'+item.name+'</div><div class="inv-stats">'+slotIcon+item.slotName+' · '+formatItemStatsDetailed(item)+' · Req lvl '+item.levelReq+'</div></div><button class="btn btn-primary btn-sm" '+(!canAfford||!canLevel?'disabled':'')+' data-buy="'+idx+'">'+tier.shopPrice+'g</button>';div.addEventListener('mouseenter',function(e) {
       showItemTooltip(item,e)
     }
-    );div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);panel.appendChild(div)
+    );_addTooltipListeners(div,function(e){showItemTooltip(item,e);});panel.appendChild(div)
   }
   );
   panel.querySelectorAll('[data-buy]').forEach(function(b) {
@@ -3837,7 +3858,7 @@ function renderShop() {
   if(shopEquipGrid) {
     shopEquipGrid.innerHTML='';
     SLOTS.forEach(function(slot) {
-      const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');div.dataset.slot=slot.id;const _spriteStyle=item&&item.spriteIdx!=null?(slot.id==='weapon'?weaponSpriteStyle(item.spriteIdx,36):slot.id==='offhand'?offhandSpriteStyle(item.spriteIdx,36):(slot.id==='amulet'||slot.id==='ring1'||slot.id==='ring2')?jewelrySpriteStyle(item.spriteIdx,36):ARMOR_SLOTS.indexOf(slot.id)!==-1?armorSpriteStyle(slot.id,item.spriteIdx,36):null):null;const iconSvg=_spriteStyle?'<div style="'+_spriteStyle+'"></div>':'<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>';if(item){div.addEventListener('mouseenter',function(e){showGearTooltip(item,e)});div.addEventListener('mousemove',_positionGearTooltip);div.addEventListener('mouseleave',hideGearTooltip);}shopEquipGrid.appendChild(div);
+      const item=state.equipped[slot.id];const div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'')+(item&&item.rare?' rare':'');div.dataset.slot=slot.id;const _spriteStyle=item&&item.spriteIdx!=null?(slot.id==='weapon'?weaponSpriteStyle(item.spriteIdx,36):slot.id==='offhand'?offhandSpriteStyle(item.spriteIdx,36):(slot.id==='amulet'||slot.id==='ring1'||slot.id==='ring2')?jewelrySpriteStyle(item.spriteIdx,36):ARMOR_SLOTS.indexOf(slot.id)!==-1?armorSpriteStyle(slot.id,item.spriteIdx,36):null):null;const iconSvg=_spriteStyle?'<div style="'+_spriteStyle+'"></div>':'<svg class="slot-icon"><use href="#'+slotIconId(slot.id)+'" xlink:href="#'+slotIconId(slot.id)+'"/></svg>';div.innerHTML=iconSvg+'<div class="slot-label">'+slot.name+'</div>';if(item){_addTooltipListeners(div,function(e){showGearTooltip(item,e);});}shopEquipGrid.appendChild(div);
     });
   }
 }
@@ -4217,6 +4238,7 @@ function init() {
     document.getElementById('btnExport').addEventListener('click',exportData);
     document.getElementById('btnImport').addEventListener('click',importData);
     document.getElementById('btnForceReload').addEventListener('click',forceReload);
+    document.addEventListener('touchstart',function(){hideGearTooltip();_tooltipTouchSource=null;},{passive:true});
     document.getElementById('btnReset').addEventListener('click',confirmReset);
     document.getElementById('btnDismissLevelUp').addEventListener('click',dismissLevelUp);
     document.getElementById('btnDismissReward').addEventListener('click',dismissRewardPopup);
