@@ -1948,7 +1948,8 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 <div class="panel">
 <div class="panel-header">Data</div>
 <div class="panel-body">
-<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">Your progress is saved locally. Export a backup to keep it safe.</div>
+<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;" id="saveStatusText">Your progress is saved locally. Sign in to sync across devices.</div>
+<div id="authSection" style="margin-bottom:10px;"></div>
 <div class="btn-row">
 <button class="btn btn-ghost btn-sm" id="btnSoundToggle" title="Toggle sound effects">Sound: On</button>
 <button class="btn btn-ghost btn-sm" id="btnExport">Export Save</button>
@@ -2115,6 +2116,7 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="exercises.js"></script>
 <script>
@@ -2526,6 +2528,92 @@ const SLOT_SPRITE_CONFIG={
   boots: {img:'images/items/boots.png',  cols:8,rows:7}
 };
 const STORAGE_KEY="ironChronicle_v1";
+const SUPABASE_URL="https://omkpatswcwqtqwbrblyw.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ta3BhdHN3Y3dxdHF3YnJibHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NDMzOTUsImV4cCI6MjA5MjUxOTM5NX0.OeKucVxzyHWdg3qjAnW7RXEp8-vWL_g1rS4P4XPRang";
+let sbClient=null;
+let currentUser=null;
+
+function initSupabase() {
+  try {
+    sbClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  } catch(e) {
+    console.error("Supabase init failed",e);
+  }
+}
+
+function renderAuthUI() {
+  const el=document.getElementById("authSection");
+  if(!el)return;
+  if(currentUser) {
+    el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Signed in as <span style="color:var(--gold-light)">'+currentUser.email+'</span></div>'+
+      '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="manualCloudSync()">Sync Now</button><button class="btn btn-ghost btn-sm" onclick="authSignOut()">Sign Out</button></div>';
+    const st=document.getElementById("saveStatusText");
+    if(st)st.textContent="Progress saved locally and to cloud.";
+  } else {
+    el.innerHTML='<div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Sign in to sync progress across devices.</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'+
+      '<input id="authEmail" type="email" placeholder="Email" style="flex:1;min-width:140px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:13px;border-radius:2px;">'+
+      '<input id="authPass" type="password" placeholder="Password" style="flex:1;min-width:120px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;font-size:13px;border-radius:2px;">'+
+      '</div>'+
+      '<div class="btn-row"><button class="btn btn-ghost btn-sm" onclick="authSignIn()">Sign In</button><button class="btn btn-ghost btn-sm" onclick="authSignUp()">Create Account</button></div>';
+    const st=document.getElementById("saveStatusText");
+    if(st)st.textContent="Your progress is saved locally. Sign in to sync across devices.";
+  }
+}
+
+async function loadCloudSave() {
+  if(!sbClient||!currentUser)return null;
+  try {
+    const {data,error}=await sbClient.from("player_saves").select("state").eq("user_id",currentUser.id).single();
+    if(error||!data)return null;
+    const s=data.state;
+    if(s&&typeof s==="object") {
+      const def=defaultState();
+      for(const k in def)if(!(k in s))s[k]=def[k];
+      return migrateItems(migrateWeek(s));
+    }
+  } catch(e) {
+    console.error("Cloud load failed",e);
+  }
+  return null;
+}
+
+async function pushCloudSave() {
+  if(!sbClient||!currentUser)return;
+  try {
+    await sbClient.from("player_saves").upsert({user_id:currentUser.id,state:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  } catch(e) {
+    console.error("Cloud save failed",e);
+  }
+}
+
+async function authSignIn() {
+  const email=document.getElementById("authEmail")?.value?.trim();
+  const pass=document.getElementById("authPass")?.value;
+  if(!email||!pass){toast("Enter email and password.");return;}
+  const {error}=await sbClient.auth.signInWithPassword({email,password:pass});
+  if(error)toast("Sign in failed: "+error.message);
+}
+
+async function authSignUp() {
+  const email=document.getElementById("authEmail")?.value?.trim();
+  const pass=document.getElementById("authPass")?.value;
+  if(!email||!pass){toast("Enter email and password.");return;}
+  if(pass.length<6){toast("Password must be at least 6 characters.");return;}
+  const {error}=await sbClient.auth.signUp({email,password:pass});
+  if(error)toast("Sign up failed: "+error.message);
+  else toast("Account created! You can now sign in.");
+}
+
+async function authSignOut() {
+  await sbClient.auth.signOut();
+  toast("Signed out.");
+}
+
+async function manualCloudSync() {
+  await pushCloudSave();
+  toast("Synced to cloud.");
+}
 const GAME_VERSION="v0.11 · 2026-04-19";
 let state,combat=null,exerciseCounter=0,itemIdCounter=1;
 function makeItemId() {
@@ -2633,6 +2721,7 @@ function saveState() {
   } catch(e) {
     console.error("save failed",e)
   }
+  pushCloudSave();
 }
 function getGearBonus() {
   const bonus= {
@@ -4015,7 +4104,30 @@ function triggerCryActivate(playerEl) {
 }
 function init() {
   try {
+    initSupabase();
     state=loadState();
+    renderAuthUI();
+    if(sbClient) {
+      sbClient.auth.getSession().then(function({data:{session}}) {
+        currentUser=session?.user??null;
+        renderAuthUI();
+        if(currentUser) {
+          loadCloudSave().then(function(cloudState) {
+            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();}
+          });
+        }
+      });
+      sbClient.auth.onAuthStateChange(function(event,session) {
+        currentUser=session?.user??null;
+        renderAuthUI();
+        if(event==="SIGNED_IN") {
+          loadCloudSave().then(function(cloudState) {
+            if(cloudState){state=cloudState;localStorage.setItem(STORAGE_KEY,JSON.stringify(state));renderAll();toast("Cloud save loaded.");}
+            else{pushCloudSave();toast("Signed in. Local save uploaded to cloud.");}
+          });
+        }
+      });
+    }
     document.getElementById('gameVersion').textContent=GAME_VERSION;
     document.getElementById('tabBar').addEventListener('click',function(e) {
       const tab=e.target.closest('.tab');if(tab&&tab.dataset.tab)switchTab(tab.dataset.tab)
