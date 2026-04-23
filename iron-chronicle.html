@@ -3922,7 +3922,7 @@ function confirmReset() {
   {
       label:"Reset Everything",
       onClick:function() {
-      localStorage.removeItem(STORAGE_KEY);state=defaultState();state.shopStock=generateShopStock();saveState();renderAll();toast("Game reset.")
+      localStorage.removeItem(STORAGE_KEY);state=defaultState();state.shopStock=generateShopStock();renderAll();toast("Game reset.");showWelcomeScreen();
     }
   }
   ])
