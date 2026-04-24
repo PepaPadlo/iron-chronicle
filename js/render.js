@@ -53,6 +53,10 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPh);
   });
+  const lang = store.state?.tutorialLang || 'en';
+  document.querySelectorAll('#langSwitcher [data-lang]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
 }
 
 // ── Slot / SVG helpers ────────────────────────────────────────

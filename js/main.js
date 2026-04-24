@@ -118,6 +118,15 @@ function setupEventDelegation() {
     if (slot) unequipItem(slot.dataset.unequip);
   });
 
+  // Language switcher
+  document.getElementById('langSwitcher').addEventListener('click', e => {
+    const btn = e.target.closest('[data-lang]');
+    if (!btn) return;
+    store.state.tutorialLang = btn.dataset.lang;
+    saveState();
+    renderAll();
+  });
+
   // Global touch — hide tooltip
   document.addEventListener('touchstart', () => hideGearTooltip(), { passive: true });
 }
@@ -132,7 +141,7 @@ function init() {
       store.state.shopStock = generateShopStock();
     }
 
-    document.getElementById('gameVersion').textContent = 'v0.20 · 2026-04-24';
+    document.getElementById('gameVersion').textContent = 'v0.21 · 2026-04-24';
 
     // Static button listeners
     document.getElementById('btnAddExercise').addEventListener('click', addExercise);

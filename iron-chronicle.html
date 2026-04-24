@@ -60,6 +60,19 @@ body {
   border-bottom:1px solid var(--border);
   margin-bottom:16px;
 }
+#headerTopRight {
+  position:absolute;top:0;right:0;
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+}
+#langSwitcher { display:flex; gap:2px; }
+.lang-btn-sm {
+  background:none;border:1px solid var(--border);color:var(--text-dim);
+  font-size:9px;font-family:'Cinzel',serif;letter-spacing:1px;
+  padding:2px 5px;cursor:pointer;border-radius:1px;line-height:1.5;
+  transition:color .15s,border-color .15s;
+}
+.lang-btn-sm:hover { color:var(--text); border-color:var(--text-dim); }
+.lang-btn-sm.active { color:var(--gold-light); border-color:var(--gold-light); }
 
 .game-title {
   font-family:'Cinzel',serif;
@@ -1966,7 +1979,14 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="game-title">Iron Chronicle</div>
 <div class="game-subtitle">A record of iron &amp; will</div>
 <div class="game-version" id="gameVersion"></div>
-<div id="headerAuth" style="position:absolute;top:0;right:0;font-size:12px;color:var(--text-dim);"></div>
+<div id="headerTopRight">
+  <div id="headerAuth" style="font-size:11px;color:var(--text-dim);"></div>
+  <div id="langSwitcher">
+    <button class="lang-btn-sm" data-lang="en">EN</button>
+    <button class="lang-btn-sm" data-lang="cs">CS</button>
+    <button class="lang-btn-sm" data-lang="pl">PL</button>
+  </div>
+</div>
 </div>
 <div class="tabs" id="tabBar">
 <button class="tab active" data-tab="main" data-i18n="tab_home">Home</button>
