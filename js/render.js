@@ -215,9 +215,25 @@ function renderQuest() {
     pip.textContent = i < done ? '⚔' : '○';
     pips.appendChild(pip);
   }
-  document.getElementById('questReward').innerHTML = s.questCompleted
-    ? `<span style="color:var(--green-light)">${t('quest_completed').replace('{n}', s.streak)}</span>`
-    : t('quest_reward').replace('{gold}', CONFIG.questGoldReward).replace('{xp}', CONFIG.questXPReward);
+  const mult  = Math.min(1.5, Math.round((1.0 + s.streak * 0.1) * 10) / 10);
+  const isMax = mult >= 1.5;
+  const pct   = Math.round((mult - 1) * 100);
+
+  document.getElementById('questEmblem').innerHTML = isMax
+    ? `<img src="images/emblem.png" class="quest-emblem" alt="Max Streak">`
+    : '';
+
+  if (s.questCompleted) {
+    document.getElementById('questReward').innerHTML =
+      `<span style="color:var(--green-light)">${t('quest_completed').replace('{n}', s.streak)}</span>`;
+  } else {
+    const gold = Math.round(CONFIG.questGoldReward * mult);
+    const xp   = Math.round(CONFIG.questXPReward   * mult);
+    const base = t('quest_reward').replace('{gold}', gold).replace('{xp}', xp);
+    document.getElementById('questReward').innerHTML = mult > 1.0
+      ? base + ` <span style="color:var(--gold-light);font-size:11px;">✦ +${pct}%</span>`
+      : base;
+  }
 }
 
 // ── History tab ───────────────────────────────────────────────
@@ -228,12 +244,21 @@ function renderHistory() {
     panel.innerHTML = `<div class="empty-state">${t('history_empty')}</div>`;
     return;
   }
-  panel.innerHTML = s.history.map(h =>
-    `<div class="history-entry">` +
-    `<div style="flex:1;min-width:0;"><div class="history-date">${h.date}</div>` +
-    `<div class="history-exercises">${h.exercises.join(' · ')}</div></div>` +
-    `<div class="history-xp">+${h.xp} XP</div></div>`
-  ).join('');
+  panel.innerHTML = s.history.map(h => {
+    if (h.type === 'quest') {
+      return `<div class="history-entry history-quest">` +
+        `<div style="flex:1;min-width:0;"><div class="history-date">${h.date}</div>` +
+        `<div class="history-exercises history-quest-label">✦ ${t('reward_weekly_title')}</div>` +
+        `<div class="history-quest-boss">${h.boss}</div></div>` +
+        `<div class="history-xp history-quest-xp">+${h.xp} XP · +${h.gold} ${t('reward_gold')}</div>` +
+        `</div>`;
+    }
+    return `<div class="history-entry">` +
+      `<div style="flex:1;min-width:0;"><div class="history-date">${h.date}</div>` +
+      `<div class="history-exercises">${h.exercises.join(' · ')}</div></div>` +
+      `<div class="history-xp">+${h.xp} XP</div>` +
+      `</div>`;
+  }).join('');
 }
 
 // ── Stats tab ─────────────────────────────────────────────────

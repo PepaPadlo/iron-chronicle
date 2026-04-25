@@ -213,14 +213,17 @@ export function logWorkout() {
   const staminaEarned = Math.floor(totalXP * CONFIG.staminaPerXPRatio);
   s.weekSessions = Math.min(s.weekSessions + 1, CONFIG.weeklyTarget);
 
-  let questBonusXP  = 0;
-  let questJustDone = false;
+  let questBonusXP    = 0;
+  let questGoldEarned = 0;
+  let questJustDone   = false;
+  const questStreakMult = Math.min(1.5, Math.round((1.0 + s.streak * 0.1) * 10) / 10);
   if (s.weekSessions >= CONFIG.weeklyTarget && !s.questCompleted) {
-    s.questCompleted = true;
-    s.gold += CONFIG.questGoldReward;
-    questBonusXP  = CONFIG.questXPReward;
-    totalXP      += questBonusXP;
-    questJustDone = true;
+    s.questCompleted  = true;
+    questBonusXP      = Math.round(CONFIG.questXPReward  * questStreakMult);
+    questGoldEarned   = Math.round(CONFIG.questGoldReward * questStreakMult);
+    s.gold           += questGoldEarned;
+    totalXP          += questBonusXP;
+    questJustDone     = true;
   }
 
   s.totalSessions++;
@@ -233,8 +236,9 @@ export function logWorkout() {
 
   const { leveled, newAbility } = checkLevelUp();
 
+  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   s.history.unshift({
-    date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    date,
     exercises: exercises.map(ex => {
       const info = EXERCISES.find(x => x.name === ex.name);
       const dn   = info ? exName(info) : ex.name;
@@ -242,15 +246,24 @@ export function logWorkout() {
       if (info && info.running) return dn + ' ' + ex.reps + 'km';
       return dn + ' ' + ex.sets + '×' + ex.reps + '@' + ex.weight + 'kg';
     }),
-    xp: totalXP,
+    xp: totalXP - questBonusXP,
   });
+  if (questJustDone) {
+    s.history.unshift({
+      date,
+      type: 'quest',
+      boss: s.currentWeeklyBoss,
+      xp:   questBonusXP,
+      gold: questGoldEarned,
+    });
+  }
   if (s.history.length > 30) s.history.pop();
 
   saveState();
   playSound('gold');
-  showNarrative(totalXP, goldEarned, staminaEarned, statGains, questJustDone, questBonusXP);
+  showNarrative(totalXP, goldEarned, staminaEarned, statGains, questJustDone, questBonusXP, questGoldEarned);
   queueRewardPopup('session', { xp: totalXP - questBonusXP, gold: goldEarned, stamina: staminaEarned, stats: statGains });
-  if (questJustDone) queueRewardPopup('quest', { boss: s.currentWeeklyBoss, streak: s.streak + 1 });
+  if (questJustDone) queueRewardPopup('quest', { boss: s.currentWeeklyBoss, streak: s.streak + 1, xp: questBonusXP, gold: questGoldEarned, streakMult: questStreakMult });
   if (leveled)       queueRewardPopup('levelup', { ability: newAbility });
 
   document.getElementById('exerciseList').innerHTML = '';
@@ -262,7 +275,7 @@ export function logWorkout() {
 }
 
 // ── Narrative ─────────────────────────────────────────────────
-function showNarrative(xp, gold, stamina, stats, questDone, questBonus) {
+function showNarrative(xp, gold, stamina, stats, questDone, questBonus, questGold) {
   const text = NARRATIVES[Math.floor(Math.random() * NARRATIVES.length)];
   document.getElementById('narrativeText').textContent = '"' + text + '"';
   let rewards = `<span class="reward-chip xp">+${xp} XP</span>`;
@@ -271,7 +284,7 @@ function showNarrative(xp, gold, stamina, stats, questDone, questBonus) {
   if (stats.STR > 0) rewards += `<span class="reward-chip stat">+${stats.STR} STR</span>`;
   if (stats.DEX > 0) rewards += `<span class="reward-chip stat">+${stats.DEX} DEX</span>`;
   if (stats.VIT > 0) rewards += `<span class="reward-chip stat">+${stats.VIT} VIT</span>`;
-  if (questDone) rewards += `<span class="reward-chip gold">✦ QUEST! +${CONFIG.questGoldReward}g +${questBonus} XP</span>`;
+  if (questDone) rewards += `<span class="reward-chip gold">✦ QUEST! +${questGold}g +${questBonus} XP</span>`;
   document.getElementById('narrativeRewards').innerHTML = rewards;
   const box = document.getElementById('narrativeBox');
   box.classList.remove('visible');
@@ -322,8 +335,9 @@ function showNextRewardPopup() {
   } else if (type === 'quest') {
     titleEl.textContent = t('reward_weekly_title');
     subEl.textContent   = t('reward_weekly_falls').replace('{boss}', data.boss);
-    rows += `<div class="reward-popup-row"><span>${t('reward_bonus_gold')}</span><span>+${CONFIG.questGoldReward}</span></div>`;
-    rows += `<div class="reward-popup-row"><span>${t('reward_bonus_xp')}</span><span>+${CONFIG.questXPReward}</span></div>`;
+    rows += `<div class="reward-popup-row"><span>${t('reward_bonus_gold')}</span><span>+${data.gold}</span></div>`;
+    rows += `<div class="reward-popup-row"><span>${t('reward_bonus_xp')}</span><span>+${data.xp}</span></div>`;
+    if (data.streakMult > 1.0) rows += `<div class="reward-popup-row" style="color:var(--gold-light)"><span>${t('reward_streak_bonus')}</span><span>+${Math.round((data.streakMult - 1) * 100)}%</span></div>`;
     rows += `<div class="reward-popup-row"><span>${t('reward_streak')}</span><span>${data.streak} ${t('reward_weeks')}</span></div>`;
   }
   bodyEl.innerHTML = rows;
