@@ -8,6 +8,17 @@ import { playSound }       from './audio.js';
 import { renderAll, switchTab } from './render.js';
 import { toast, showModal }     from './ui.js';
 
+// ── Consistency streak ────────────────────────────────────────
+const STREAK_WINDOW = 7 * 24 * 60 * 60 * 1000;
+
+function getPreviewMult(name) {
+  const entry = store.state.exerciseStreaks?.[name];
+  if (!entry || entry.lastDone === 0) return 1.0;
+  if (Date.now() - entry.lastDone <= STREAK_WINDOW)
+    return Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
+  return 1.0;
+}
+
 // ── XP / stat helpers ─────────────────────────────────────────
 export function calcExerciseXP(ex) {
   const exercise = EXERCISES.find(e => e.name === ex.name);
@@ -60,6 +71,19 @@ function updateExerciseForm(entryDiv) {
   }
 }
 
+function updateStreakBadge(entryDiv) {
+  const name  = entryDiv.querySelector('.ex-name').value;
+  const badge = entryDiv.querySelector('.streak-badge');
+  if (!badge) return;
+  const mult = getPreviewMult(name);
+  if (mult > 1.0) {
+    badge.textContent   = '×' + mult.toFixed(2);
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 function updatePreview(entryDiv) {
   const name     = entryDiv.querySelector('.ex-name').value;
   const weight   = parseWeight(entryDiv.querySelector('.ex-weight').value);
@@ -67,8 +91,9 @@ function updatePreview(entryDiv) {
   const sets     = parseInt(entryDiv.querySelector('.ex-sets').value) || 0;
   const exercise = EXERCISES.find(e => e.name === name);
   if (!exercise) return;
-  const xp          = calcExerciseXP({ name, weight, reps, sets });
-  const statGain    = calcStatGain({ name, weight, reps, sets });
+  const mult        = getPreviewMult(name);
+  const xp          = Math.round(calcExerciseXP({ name, weight, reps, sets }) * mult);
+  const statGain    = Math.round(calcStatGain({ name, weight, reps, sets }) * mult);
   const staminaGain = Math.floor(xp * CONFIG.staminaPerXPRatio);
   const goldGain    = Math.floor(xp * CONFIG.goldPerXPRatio);
   const preview     = entryDiv.querySelector('.xp-preview');
@@ -86,6 +111,7 @@ function updatePreview(entryDiv) {
       text += ' · +' + Math.max(1, Math.floor(statGain * 0.3)) + ' VIT';
     }
   }
+  if (mult > 1.0) text += ' · ×' + mult.toFixed(2) + ' streak';
   preview.textContent = text;
 }
 
@@ -103,7 +129,7 @@ export function addExercise() {
   div.className      = 'exercise-entry';
   div.dataset.entryId = id;
   div.innerHTML =
-    `<div class="exercise-entry-header"><span class="exercise-num">${t('ex_label')} ${id}</span><button class="remove-btn" title="Remove">✕</button></div>` +
+    `<div class="exercise-entry-header"><span class="exercise-num">${t('ex_label')} ${id}</span><span class="streak-badge" style="display:none"></span><button class="remove-btn" title="Remove">✕</button></div>` +
     `<div class="form-row">` +
       `<div class="form-group"><label>${t('ex_exercise')}</label><select class="ex-name">${options}</select></div>` +
       `<div class="form-group ex-weight-group"><label>${t('ex_weight')}</label><input type="text" inputmode="decimal" class="ex-weight" value="60"></div>` +
@@ -120,9 +146,11 @@ export function addExercise() {
   div.querySelector('.ex-name').addEventListener('change', () => {
     updateExerciseForm(div);
     updatePreview(div);
+    updateStreakBadge(div);
   });
   updateExerciseForm(div);
   updatePreview(div);
+  updateStreakBadge(div);
 }
 
 function gatherExercises() {
@@ -145,13 +173,32 @@ export function logWorkout() {
   const exercises = gatherExercises();
   if (exercises.length === 0) { toast('Add at least one exercise.'); return; }
 
+  // ── Update streak entries, collect applied multipliers ───────
+  const s = store.state;
+  if (!s.exerciseStreaks) s.exerciseStreaks = {};
+  const now = Date.now();
+  const streakMults = {};
+  exercises.forEach(ex => {
+    const entry = s.exerciseStreaks[ex.name] || { mult: 1.0, lastDone: 0 };
+    if (entry.lastDone > 0) {
+      if (now - entry.lastDone <= STREAK_WINDOW)
+        entry.mult = Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
+      else
+        entry.mult = 1.0;
+    }
+    entry.lastDone = now;
+    s.exerciseStreaks[ex.name] = entry;
+    streakMults[ex.name] = entry.mult;
+  });
+
   let totalXP = 0;
   const statGains = { STR: 0, DEX: 0, VIT: 0 };
   exercises.forEach(ex => {
-    totalXP += calcExerciseXP(ex);
+    const mult = streakMults[ex.name] ?? 1.0;
+    totalXP += Math.round(calcExerciseXP(ex) * mult);
     const exercise = EXERCISES.find(e => e.name === ex.name);
     if (exercise) {
-      const gain = calcStatGain(ex);
+      const gain = Math.round(calcStatGain(ex) * mult);
       statGains[exercise.stat] += gain;
       if (exercise.timed) {
         statGains.VIT += gain;
@@ -164,7 +211,6 @@ export function logWorkout() {
   totalXP += CONFIG.sessionBonusXP;
   const goldEarned    = Math.floor(totalXP * CONFIG.goldPerXPRatio);
   const staminaEarned = Math.floor(totalXP * CONFIG.staminaPerXPRatio);
-  const s = store.state;
   s.weekSessions = Math.min(s.weekSessions + 1, CONFIG.weeklyTarget);
 
   let questBonusXP  = 0;

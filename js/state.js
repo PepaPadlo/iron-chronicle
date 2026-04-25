@@ -53,6 +53,7 @@ export function defaultState() {
     tutorialDone:         false,
     tutorialLang:         null,
     savedTemplates:       [],
+    exerciseStreaks:      {},
   };
 }
 

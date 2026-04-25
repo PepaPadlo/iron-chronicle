@@ -19,8 +19,8 @@ export function clearCombat()    { combat = null; }
 
 // ── Combat log ────────────────────────────────────────────────
 function addLog(html) {
-  combat.log.unshift('<div class="combat-log-line">' + html + '</div>');
-  if (combat.log.length > 20) combat.log.pop();
+  combat.log.push('<div class="combat-log-line">' + html + '</div>');
+  if (combat.log.length > 50) combat.log.shift();
 }
 
 // ── Render combat overlay ─────────────────────────────────────
@@ -32,7 +32,9 @@ export function renderCombat() {
   document.getElementById('playerHpText').textContent = Math.max(0, combat.playerHP) + ' / ' + combat.playerMaxHP + ' HP';
   document.getElementById('playerStaminaBar').style.width = (combat.playerStamina / CONFIG.staminaCap * 100) + '%';
   document.getElementById('playerStaminaText').textContent = combat.playerStamina + ' / ' + CONFIG.staminaCap + ' Stamina';
-  document.getElementById('combatLog').innerHTML = combat.log.join('');
+  const logEl = document.getElementById('combatLog');
+  logEl.innerHTML = combat.log.join('');
+  logEl.scrollTop = logEl.scrollHeight;
 
   const playerEl = document.getElementById('playerCombatant');
   if (playerEl) {

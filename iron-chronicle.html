@@ -101,6 +101,25 @@ body {
   margin-top:6px;
 }
 
+@media (max-width:480px) {
+  .header {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:8px 12px 12px;
+    gap:2px;
+  }
+  .game-title { font-size:20px; letter-spacing:2px; }
+  #headerTopRight {
+    position:static;
+    order:-1;
+    align-self:flex-end;
+    flex-direction:row;
+    align-items:center;
+    gap:8px;
+  }
+}
+
 .panel {
   background:var(--bg2);
   border:1px solid var(--border);
@@ -365,6 +384,16 @@ body {
   font-size:10px;
   color:var(--text-dim);
   letter-spacing:1px;
+}
+
+.streak-badge {
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  color:var(--gold-light);
+  border:1px solid var(--gold-dim);
+  padding:1px 6px;
+  border-radius:2px;
+  letter-spacing:0.5px;
 }
 
 .remove-btn {
@@ -789,10 +818,11 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   border:1px solid var(--border);
   padding:12px;
   border-radius:2px;
-  margin-bottom:12px;
-  max-height:180px;
+  margin-top:12px;
+  height:128px;
   overflow-y:auto;
   font-size:14px;
+  scroll-behavior:smooth;
 }
 
 .combat-log-line {
@@ -2096,6 +2126,7 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="panel">
 <div class="panel-header" data-i18n="ph_train">Log a Training Session</div>
 <div class="panel-body">
+<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">Repeat an exercise within 7 days to earn a consistency bonus (+5% per week, up to ×1.50 max). Miss the 7-day window and the bonus resets to ×1.00.</div>
 <div id="exerciseList"></div>
 <div class="btn-row">
 <button class="btn btn-ghost" id="btnAddExercise" data-i18n="btn_add_exercise">+ Add Exercise</button>
@@ -2175,8 +2206,8 @@ body.tutorial-active .container { pointer-events:none; }
 <div style="margin-top:8px"><div class="bar-wrap"><div class="bar-fill stamina" id="playerStaminaBar" style="width:100%"></div></div>
 <div class="bar-text" id="playerStaminaText">100 / 100 Stamina</div></div>
 </div>
-<div class="combat-log" id="combatLog"></div>
 <div id="combatActions"><div class="ability-grid" id="abilityGrid"></div></div>
+<div class="combat-log" id="combatLog"></div>
 <div id="combatResultArea"></div>
 </div>
 </div>
