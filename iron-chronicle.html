@@ -411,6 +411,126 @@ body {
   letter-spacing:0.5px;
 }
 
+.stat-icons {
+  font-size:13px;
+  line-height:1;
+  margin-left:auto;
+  margin-right:6px;
+}
+
+.per-set-bar {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:2px 0 4px;
+  min-height:20px;
+}
+
+.per-set-btn {
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-size:11px;
+  cursor:pointer;
+  padding:0;
+  letter-spacing:0.5px;
+  text-decoration:underline;
+  text-decoration-style:dashed;
+  text-underline-offset:2px;
+}
+.per-set-btn:hover { color:var(--text); }
+
+.per-set-summary {
+  display:none;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  font-size:12px;
+  color:var(--text);
+}
+
+.per-set-active-label {
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  color:var(--gold-light);
+  letter-spacing:1px;
+}
+
+.per-set-edit-btn {
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:11px;
+  color:var(--gold-dim);
+  padding:0 2px;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.per-set-edit-btn:hover { color:var(--gold-light); }
+
+.per-set-clear-btn {
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:11px;
+  color:var(--red-light);
+  padding:0 2px;
+}
+
+.per-set-row {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+}
+.per-set-row:last-child { border-bottom:none; }
+
+.per-set-num {
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  color:var(--text-dim);
+  width:36px;
+  flex-shrink:0;
+  letter-spacing:1px;
+}
+
+.per-set-row input {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--text-bright);
+  padding:4px 6px;
+  font-size:14px;
+  font-family:inherit;
+  border-radius:1px;
+}
+
+.per-set-weight { width:68px; }
+.per-set-reps   { width:54px; }
+
+.per-set-unit {
+  font-size:12px;
+  color:var(--text-dim);
+  flex-shrink:0;
+}
+
+.per-set-remove-btn {
+  background:none;
+  border:none;
+  color:var(--red-light);
+  cursor:pointer;
+  font-size:12px;
+  margin-left:auto;
+  padding:2px 4px;
+}
+.per-set-remove-btn:hover { color:#e05050; }
+
+#perSetRows {
+  max-height:280px;
+  overflow-y:auto;
+  margin-bottom:4px;
+}
+
 .remove-btn {
   background:none;
   border:none;
@@ -2238,6 +2358,18 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="modal-text" id="modalText"></div>
 <textarea id="modalInput" style="display:none;"></textarea>
 <div class="modal-actions" id="modalActions"></div>
+</div>
+</div>
+<div class="modal-backdrop" id="perSetBackdrop">
+<div class="modal" style="max-width:480px;width:100%">
+<div class="modal-title">SET BY SET</div>
+<div id="perSetExName" style="font-size:12px;color:var(--text-dim);letter-spacing:1px;margin-bottom:14px;"></div>
+<div id="perSetRows"></div>
+<button class="btn btn-ghost btn-sm" id="perSetAddBtn" style="font-size:12px;margin-top:6px">+ Add Set</button>
+<div class="modal-actions" style="margin-top:16px">
+<button class="btn btn-ghost" id="perSetCancelBtn">Cancel</button>
+<button class="btn btn-primary" id="perSetApplyBtn">Apply</button>
+</div>
 </div>
 </div>
 <div class="reward-popup" id="rewardPopup">

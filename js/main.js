@@ -8,7 +8,7 @@ import { t }               from './i18n.js';
 import { renderAll, switchTab, hideGearTooltip } from './render.js';
 import { enterDungeon, exitCombat, setToast, setItemHelpers } from './combat.js';
 import { addExercise, logWorkout, saveTemplate, loadTemplate, deleteTemplate,
-         showLevelUp, dismissLevelUp, dismissRewardPopup } from './training.js';
+         showLevelUp, dismissLevelUp, dismissRewardPopup, initPerSetModal } from './training.js';
 import { toast, showModal, closeModal, exportData, importData, confirmReset, forceReload } from './ui.js';
 import { initAuth, renderAuthUI, showWelcomeScreen, showSignInModal,
          welcomePlayLocal, welcomeShowAuth, welcomeBack, welcomeSignIn, welcomeSignUp,
@@ -184,6 +184,7 @@ function init() {
     document.getElementById('tutNextBtn')?.addEventListener('click', nextTutorialStep);
     document.getElementById('tutSkipBtn')?.addEventListener('click', skipTutorial);
 
+    initPerSetModal();
     setupEventDelegation();
     addExercise();
     renderAll();

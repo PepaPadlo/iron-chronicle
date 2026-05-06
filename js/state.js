@@ -36,7 +36,7 @@ export function defaultState() {
     str:                  1,
     dex:                  1,
     vit:                  1,
-    weekSessions:         0,
+    weekTrainingDays:     [],
     weekStart:            getWeekStart(),
     streak:               0,
     totalSessions:        0,
@@ -103,12 +103,18 @@ export function migrateItems(s) {
 
 export function migrateWeek(s) {
   const currentWeek = getWeekStart();
+  if (!s.weekTrainingDays) s.weekTrainingDays = [];
   if (s.weekStart !== currentWeek) {
-    if (s.weekSessions >= CONFIG.weeklyTarget) s.streak = (s.streak || 0) + 1;
+    const daysCompleted = s.weekTrainingDays.length;
+    // legacy: fall back to weekSessions for saves that predate weekTrainingDays
+    const qualified = daysCompleted >= CONFIG.weeklyTarget ||
+                      (!daysCompleted && (s.weekSessions || 0) >= CONFIG.weeklyTarget);
+    if (qualified) s.streak = (s.streak || 0) + 1;
     else s.streak = 0;
-    s.weekSessions   = 0;
-    s.weekStart      = currentWeek;
-    s.questCompleted = false;
+    s.weekTrainingDays = [];
+    s.weekSessions     = 0;
+    s.weekStart        = currentWeek;
+    s.questCompleted   = false;
     s.currentWeeklyBoss = WEEKLY_BOSSES[Math.floor(Math.random() * WEEKLY_BOSSES.length)];
     s.dungeonsClearedThisWeek = [];
   }

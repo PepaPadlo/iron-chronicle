@@ -1,4 +1,4 @@
-export const GAME_VERSION = 'v0.27 · 2026-04-25';
+export const GAME_VERSION = 'v0.31 · 2026-05-06';
 export const STORAGE_KEY  = 'ironChronicle_v1';
 
 export const LEVELS = [

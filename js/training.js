@@ -11,12 +11,20 @@ import { toast, showModal }     from './ui.js';
 // ── Consistency streak ────────────────────────────────────────
 const STREAK_WINDOW = 7 * 24 * 60 * 60 * 1000;
 
+function sameCalendarDay(tsA, tsB) {
+  const a = new Date(tsA), b = new Date(tsB);
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+
 function getPreviewMult(name) {
   const entry = store.state.exerciseStreaks?.[name];
   if (!entry || entry.lastDone === 0) return 1.0;
-  if (Date.now() - entry.lastDone <= STREAK_WINDOW)
-    return Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
-  return 1.0;
+  const now = Date.now();
+  if (now - entry.lastDone > STREAK_WINDOW) return 1.0;
+  if (sameCalendarDay(entry.lastDone, now)) return entry.mult;
+  return Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
 }
 
 // ── XP / stat helpers ─────────────────────────────────────────
@@ -53,22 +61,40 @@ function updateExerciseForm(entryDiv) {
   const setsGroup   = entryDiv.querySelector('.ex-sets-group');
   const repsLabel   = entryDiv.querySelector('.ex-reps-label');
   const repsInput   = entryDiv.querySelector('.ex-reps');
+  const perSetBar   = entryDiv.querySelector('.per-set-bar');
   if (exercise.timed) {
     weightGroup.style.display = 'none';
     setsGroup.style.display   = 'none';
     repsLabel.textContent     = 'Time (min)';
     repsInput.setAttribute('max', '480');
+    if (perSetBar) perSetBar.style.display = 'none';
   } else if (exercise.running) {
     weightGroup.style.display = 'none';
     setsGroup.style.display   = 'none';
     repsLabel.textContent     = 'Distance (km)';
     repsInput.setAttribute('max', '500');
+    if (perSetBar) perSetBar.style.display = 'none';
   } else {
     weightGroup.style.display = '';
     setsGroup.style.display   = '';
     repsLabel.textContent     = 'Reps';
     repsInput.setAttribute('max', '100');
+    if (perSetBar) perSetBar.style.display = '';
   }
+}
+
+function updateStatIcons(entryDiv) {
+  const name     = entryDiv.querySelector('.ex-name').value;
+  const exercise = EXERCISES.find(e => e.name === name);
+  const span     = entryDiv.querySelector('.stat-icons');
+  if (!span) return;
+  if (!exercise) { span.textContent = ''; return; }
+  let icons = '';
+  if (exercise.stat === 'STR') icons += '💪';
+  if (exercise.stat === 'DEX') icons += '🏃';
+  if (exercise.stat === 'VIT') icons += '❤️';
+  if (exercise.timed)          icons += '❤️';
+  span.textContent = icons;
 }
 
 function updateStreakBadge(entryDiv) {
@@ -86,33 +112,155 @@ function updateStreakBadge(entryDiv) {
 
 function updatePreview(entryDiv) {
   const name     = entryDiv.querySelector('.ex-name').value;
-  const weight   = parseWeight(entryDiv.querySelector('.ex-weight').value);
-  const reps     = parseInt(entryDiv.querySelector('.ex-reps').value) || 0;
-  const sets     = parseInt(entryDiv.querySelector('.ex-sets').value) || 0;
   const exercise = EXERCISES.find(e => e.name === name);
   if (!exercise) return;
-  const mult        = getPreviewMult(name);
-  const xp          = Math.round(calcExerciseXP({ name, weight, reps, sets }) * mult);
-  const statGain    = Math.round(calcStatGain({ name, weight, reps, sets }) * mult);
+  const mult    = getPreviewMult(name);
+  const preview = entryDiv.querySelector('.xp-preview');
+  if (!preview) return;
+
+  const perSets = entryDiv._perSets;
+  let xp = 0, statGain = 0, vitBonus = 0;
+
+  if (perSets && perSets.length > 0) {
+    perSets.forEach(s => {
+      const ex = { name, weight: s.weight, reps: s.reps, sets: 1 };
+      xp       += Math.round(calcExerciseXP(ex) * mult);
+      const g   = Math.round(calcStatGain(ex) * mult);
+      statGain += g;
+      if (!exercise.timed && !exercise.running && s.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && g > 0)
+        vitBonus += Math.max(1, Math.floor(g * 0.3));
+    });
+  } else {
+    const weight = parseWeight(entryDiv.querySelector('.ex-weight').value);
+    const reps   = parseInt(entryDiv.querySelector('.ex-reps').value) || 0;
+    const sets   = parseInt(entryDiv.querySelector('.ex-sets').value) || 0;
+    xp       = Math.round(calcExerciseXP({ name, weight, reps, sets }) * mult);
+    statGain = Math.round(calcStatGain({ name, weight, reps, sets }) * mult);
+    if (!exercise.timed && !exercise.running && reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && statGain > 0)
+      vitBonus = Math.max(1, Math.floor(statGain * 0.3));
+  }
+
   const staminaGain = Math.floor(xp * CONFIG.staminaPerXPRatio);
   const goldGain    = Math.floor(xp * CONFIG.goldPerXPRatio);
-  const preview     = entryDiv.querySelector('.xp-preview');
-  if (!preview) return;
   let text = xp > 0 ? '+' + xp + ' XP' : '';
   if (goldGain > 0)    text += ' · +' + goldGain + ' gold';
   if (staminaGain > 0) text += ' · +' + staminaGain + ' stamina';
   if (exercise.timed) {
     if (statGain > 0) text += ' · +' + statGain + ' VIT';
-  } else if (exercise.running) {
-    if (statGain > 0) text += ' · +' + statGain + ' ' + exercise.stat;
   } else {
     if (statGain > 0) text += ' · +' + statGain + ' ' + exercise.stat;
-    if (!exercise.timed && !exercise.running && reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && statGain > 0) {
-      text += ' · +' + Math.max(1, Math.floor(statGain * 0.3)) + ' VIT';
-    }
+    if (vitBonus > 0) text += ' · +' + vitBonus + ' VIT';
   }
   if (mult > 1.0) text += ' · ×' + mult.toFixed(2) + ' streak';
   preview.textContent = text;
+}
+
+// ── Per-set modal ─────────────────────────────────────────────
+let _perSetTarget = null;
+
+function openPerSetModal(entryDiv) {
+  _perSetTarget = entryDiv;
+  const name     = entryDiv.querySelector('.ex-name').value;
+  const exercise = EXERCISES.find(e => e.name === name);
+  document.getElementById('perSetExName').textContent = exercise ? exName(exercise) : name;
+
+  const existing = entryDiv._perSets;
+  let seed;
+  if (existing && existing.length > 0) {
+    seed = existing;
+  } else {
+    const w = parseWeight(entryDiv.querySelector('.ex-weight').value) || 60;
+    const r = parseInt(entryDiv.querySelector('.ex-reps').value) || 8;
+    const s = parseInt(entryDiv.querySelector('.ex-sets').value) || 3;
+    seed    = Array.from({ length: s }, () => ({ weight: w, reps: r }));
+  }
+  document.getElementById('perSetRows').innerHTML = '';
+  seed.forEach(s => _addPerSetRow(s.weight, s.reps));
+  document.getElementById('perSetBackdrop').classList.add('show');
+}
+
+function closePerSetModal() {
+  document.getElementById('perSetBackdrop').classList.remove('show');
+  _perSetTarget = null;
+}
+
+function _addPerSetRow(weight, reps) {
+  const container = document.getElementById('perSetRows');
+  const idx  = container.children.length;
+  const row  = document.createElement('div');
+  row.className = 'per-set-row';
+  row.innerHTML =
+    `<span class="per-set-num">SET ${idx + 1}</span>` +
+    `<input type="text" inputmode="decimal" class="per-set-weight" value="${weight}">` +
+    `<span class="per-set-unit">kg ×</span>` +
+    `<input type="number" class="per-set-reps" value="${reps}" min="1" max="200">` +
+    `<span class="per-set-unit">reps</span>` +
+    `<button class="per-set-remove-btn" title="Remove">✕</button>`;
+  row.querySelector('.per-set-remove-btn').addEventListener('click', () => {
+    row.remove();
+    _renumberPerSetRows();
+  });
+  container.appendChild(row);
+}
+
+function _renumberPerSetRows() {
+  document.querySelectorAll('#perSetRows .per-set-row').forEach((row, i) => {
+    row.querySelector('.per-set-num').textContent = 'SET ' + (i + 1);
+  });
+}
+
+function _applyPerSets() {
+  if (!_perSetTarget) return;
+  const rows = document.querySelectorAll('#perSetRows .per-set-row');
+  const sets = Array.from(rows).map(row => ({
+    weight: parseWeight(row.querySelector('.per-set-weight').value),
+    reps:   parseInt(row.querySelector('.per-set-reps').value) || 1,
+  })).filter(s => s.reps > 0);
+  _perSetTarget._perSets = sets.length > 0 ? sets : null;
+  _updatePerSetDisplay(_perSetTarget);
+  updatePreview(_perSetTarget);
+  closePerSetModal();
+}
+
+function _updatePerSetDisplay(entryDiv) {
+  const sets    = entryDiv._perSets;
+  const bar     = entryDiv.querySelector('.per-set-bar');
+  const btn     = entryDiv.querySelector('.per-set-btn');
+  const summary = entryDiv.querySelector('.per-set-summary');
+  const formRow = entryDiv.querySelector('.form-row');
+  if (!bar) return;
+  if (sets && sets.length > 0) {
+    formRow.style.display   = 'none';
+    btn.style.display       = 'none';
+    const text = sets.map(s => s.weight + '×' + s.reps).join(', ');
+    summary.innerHTML =
+      `<span class="per-set-active-label">${sets.length} SETS ·</span>` +
+      `<span>${text}</span>` +
+      `<button class="per-set-edit-btn">edit</button>` +
+      `<button class="per-set-clear-btn">✕</button>`;
+    summary.style.display = 'flex';
+    summary.querySelector('.per-set-edit-btn').addEventListener('click', () => openPerSetModal(entryDiv));
+    summary.querySelector('.per-set-clear-btn').addEventListener('click', () => {
+      entryDiv._perSets = null;
+      formRow.style.display = '';
+      btn.style.display     = '';
+      summary.style.display = 'none';
+      updatePreview(entryDiv);
+    });
+  } else {
+    formRow.style.display   = '';
+    btn.style.display       = '';
+    summary.style.display   = 'none';
+  }
+}
+
+export function initPerSetModal() {
+  document.getElementById('perSetAddBtn').addEventListener('click', () => _addPerSetRow(60, 8));
+  document.getElementById('perSetApplyBtn').addEventListener('click', _applyPerSets);
+  document.getElementById('perSetCancelBtn').addEventListener('click', closePerSetModal);
+  document.getElementById('perSetBackdrop').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closePerSetModal();
+  });
 }
 
 // ── Exercise counter ──────────────────────────────────────────
@@ -129,13 +277,15 @@ export function addExercise() {
   div.className      = 'exercise-entry';
   div.dataset.entryId = id;
   div.innerHTML =
-    `<div class="exercise-entry-header"><span class="exercise-num">${t('ex_label')} ${id}</span><span class="streak-badge" style="display:none"></span><button class="remove-btn" title="Remove">✕</button></div>` +
+    `<div class="exercise-entry-header"><span class="exercise-num">${t('ex_label')} ${id}</span><span class="stat-icons"></span><span class="streak-badge" style="display:none"></span><button class="remove-btn" title="Remove">✕</button></div>` +
     `<div class="form-row">` +
       `<div class="form-group"><label>${t('ex_exercise')}</label><select class="ex-name">${options}</select></div>` +
       `<div class="form-group ex-weight-group"><label>${t('ex_weight')}</label><input type="text" inputmode="decimal" class="ex-weight" value="60"></div>` +
       `<div class="form-group"><label class="ex-reps-label">${t('ex_reps')}</label><input type="number" class="ex-reps" value="8" min="1" max="100"></div>` +
       `<div class="form-group ex-sets-group"><label>${t('ex_sets')}</label><input type="number" class="ex-sets" value="3" min="1" max="20"></div>` +
-    `</div><div class="xp-preview"></div>`;
+    `</div>` +
+    `<div class="per-set-bar"><button class="per-set-btn">↗ per-set entry</button><div class="per-set-summary"></div></div>` +
+    `<div class="xp-preview"></div>`;
 
   document.getElementById('exerciseList').appendChild(div);
   div.querySelector('.remove-btn').addEventListener('click', () => div.remove());
@@ -144,13 +294,18 @@ export function addExercise() {
     inp.addEventListener('change', () => updatePreview(div));
   });
   div.querySelector('.ex-name').addEventListener('change', () => {
+    div._perSets = null;
     updateExerciseForm(div);
+    _updatePerSetDisplay(div);
     updatePreview(div);
     updateStreakBadge(div);
+    updateStatIcons(div);
   });
+  div.querySelector('.per-set-btn').addEventListener('click', () => openPerSetModal(div));
   updateExerciseForm(div);
   updatePreview(div);
   updateStreakBadge(div);
+  updateStatIcons(div);
 }
 
 function gatherExercises() {
@@ -158,12 +313,17 @@ function gatherExercises() {
   document.querySelectorAll('.exercise-entry').forEach(entry => {
     const name     = entry.querySelector('.ex-name').value;
     const exercise = EXERCISES.find(e => e.name === name);
-    const weight   = parseWeight(entry.querySelector('.ex-weight').value);
-    const reps     = parseInt(entry.querySelector('.ex-reps').value) || 0;
-    const sets     = (exercise && (exercise.running || exercise.timed))
-      ? 1
-      : (parseInt(entry.querySelector('.ex-sets').value) || 0);
-    if (name && reps > 0 && sets > 0) result.push({ name, weight, reps, sets });
+    const perSets  = entry._perSets;
+    if (perSets && perSets.length > 0) {
+      if (name) result.push({ name, perSets });
+    } else {
+      const weight = parseWeight(entry.querySelector('.ex-weight').value);
+      const reps   = parseInt(entry.querySelector('.ex-reps').value) || 0;
+      const sets   = (exercise && (exercise.running || exercise.timed))
+        ? 1
+        : (parseInt(entry.querySelector('.ex-sets').value) || 0);
+      if (name && reps > 0 && sets > 0) result.push({ name, weight, reps, sets });
+    }
   });
   return result;
 }
@@ -181,10 +341,11 @@ export function logWorkout() {
   exercises.forEach(ex => {
     const entry = s.exerciseStreaks[ex.name] || { mult: 1.0, lastDone: 0 };
     if (entry.lastDone > 0) {
-      if (now - entry.lastDone <= STREAK_WINDOW)
-        entry.mult = Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
-      else
+      if (now - entry.lastDone > STREAK_WINDOW)
         entry.mult = 1.0;
+      else if (!sameCalendarDay(entry.lastDone, now))
+        entry.mult = Math.min(1.5, Math.round((entry.mult + 0.05) * 100) / 100);
+      // same calendar day: mult stays unchanged
     }
     entry.lastDone = now;
     s.exerciseStreaks[ex.name] = entry;
@@ -194,30 +355,40 @@ export function logWorkout() {
   let totalXP = 0;
   const statGains = { STR: 0, DEX: 0, VIT: 0 };
   exercises.forEach(ex => {
-    const mult = streakMults[ex.name] ?? 1.0;
-    totalXP += Math.round(calcExerciseXP(ex) * mult);
+    const mult     = streakMults[ex.name] ?? 1.0;
     const exercise = EXERCISES.find(e => e.name === ex.name);
-    if (exercise) {
-      const gain = Math.round(calcStatGain(ex) * mult);
-      statGains[exercise.stat] += gain;
-      if (exercise.timed) {
-        statGains.VIT += gain;
-      } else if (!exercise.timed && !exercise.running && ex.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && gain > 0) {
-        statGains.VIT += Math.max(1, Math.floor(gain * 0.3));
+    const sets     = ex.perSets
+      ? ex.perSets.map(s => ({ name: ex.name, weight: s.weight, reps: s.reps, sets: 1 }))
+      : [ex];
+    sets.forEach(unitEx => {
+      totalXP += Math.round(calcExerciseXP(unitEx) * mult);
+      if (exercise) {
+        const gain = Math.round(calcStatGain(unitEx) * mult);
+        statGains[exercise.stat] += gain;
+        if (exercise.timed) {
+          statGains.VIT += gain;
+        } else if (!exercise.timed && !exercise.running && unitEx.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && gain > 0) {
+          statGains.VIT += Math.max(1, Math.floor(gain * 0.3));
+        }
       }
-    }
+    });
   });
 
   totalXP += CONFIG.sessionBonusXP;
   const goldEarned    = Math.floor(totalXP * CONFIG.goldPerXPRatio);
   const staminaEarned = Math.floor(totalXP * CONFIG.staminaPerXPRatio);
-  s.weekSessions = Math.min(s.weekSessions + 1, CONFIG.weeklyTarget);
+
+  // Track distinct training days for the weekly quest
+  if (!s.weekTrainingDays) s.weekTrainingDays = [];
+  const d = new Date(now);
+  const todayKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  if (!s.weekTrainingDays.includes(todayKey)) s.weekTrainingDays.push(todayKey);
 
   let questBonusXP    = 0;
   let questGoldEarned = 0;
   let questJustDone   = false;
   const questStreakMult = Math.min(1.5, Math.round((1.0 + s.streak * 0.1) * 10) / 10);
-  if (s.weekSessions >= CONFIG.weeklyTarget && !s.questCompleted) {
+  if (s.weekTrainingDays.length >= CONFIG.weeklyTarget && !s.questCompleted) {
     s.questCompleted  = true;
     questBonusXP      = Math.round(CONFIG.questXPReward  * questStreakMult);
     questGoldEarned   = Math.round(CONFIG.questGoldReward * questStreakMult);
@@ -242,6 +413,7 @@ export function logWorkout() {
     exercises: exercises.map(ex => {
       const info = EXERCISES.find(x => x.name === ex.name);
       const dn   = info ? exName(info) : ex.name;
+      if (ex.perSets) return dn + ': ' + ex.perSets.map(s => s.reps + '@' + s.weight + 'kg').join(', ');
       if (info && info.timed)   return dn + ' ' + ex.reps + 'min';
       if (info && info.running) return dn + ' ' + ex.reps + 'km';
       return dn + ' ' + ex.sets + '×' + ex.reps + '@' + ex.weight + 'kg';

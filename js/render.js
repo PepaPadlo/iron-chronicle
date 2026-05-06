@@ -204,7 +204,7 @@ function renderCharacter() {
 function renderQuest() {
   const s      = store.state;
   const target = CONFIG.weeklyTarget;
-  const done   = s.weekSessions;
+  const done   = (s.weekTrainingDays || []).length;
   document.getElementById('questDesc').textContent = t('quest_desc')
     .replace('{boss}', s.currentWeeklyBoss).replace('{n}', target);
   const pips = document.getElementById('questPips');
