@@ -83,18 +83,22 @@ function updateExerciseForm(entryDiv) {
   }
 }
 
-function updateStatIcons(entryDiv) {
-  const name     = entryDiv.querySelector('.ex-name').value;
-  const exercise = EXERCISES.find(e => e.name === name);
-  const span     = entryDiv.querySelector('.stat-icons');
-  if (!span) return;
-  if (!exercise) { span.textContent = ''; return; }
+function exStatIcons(exercise) {
+  if (!exercise) return '';
   let icons = '';
   if (exercise.stat === 'STR') icons += '💪';
   if (exercise.stat === 'DEX') icons += '🏃';
   if (exercise.stat === 'VIT') icons += '❤️';
   if (exercise.timed)          icons += '❤️';
-  span.textContent = icons;
+  return icons;
+}
+
+function updateStatIcons(entryDiv) {
+  const name     = entryDiv.querySelector('.ex-name').value;
+  const exercise = EXERCISES.find(e => e.name === name);
+  const span     = entryDiv.querySelector('.stat-icons');
+  if (!span) return;
+  span.textContent = exStatIcons(exercise);
 }
 
 function updateStreakBadge(entryDiv) {
@@ -270,7 +274,7 @@ export function addExercise() {
   exerciseCounter++;
   const id      = exerciseCounter;
   const options = EXERCISES.map(e =>
-    `<option value="${e.name}">${exName(e)}${e.running ? ' ' + t('ex_run_suffix') : e.timed ? ' ' + t('ex_activity_suffix') : ''}</option>`
+    `<option value="${e.name}">${exName(e)}${e.running ? ' ' + t('ex_run_suffix') : e.timed ? ' ' + t('ex_activity_suffix') : ''} ${exStatIcons(e)}</option>`
   ).join('');
 
   const div = document.createElement('div');
