@@ -3,6 +3,7 @@ import { CONFIG }          from './config.js';
 import { EXERCISES }       from './exercises.js';
 import { NARRATIVES } from './data.js';
 import { checkLevelUp, saveState, getLevelData, parseWeight } from './state.js';
+import { generateShopStock } from './items.js';
 import { t, exName }       from './i18n.js';
 import { playSound }       from './audio.js';
 import { renderAll, switchTab } from './render.js';
@@ -105,9 +106,14 @@ function updateStreakBadge(entryDiv) {
   const name  = entryDiv.querySelector('.ex-name').value;
   const badge = entryDiv.querySelector('.streak-badge');
   if (!badge) return;
-  const mult = getPreviewMult(name);
-  if (mult > 1.0) {
-    badge.textContent   = '×' + mult.toFixed(2);
+  const entry = store.state.exerciseStreaks?.[name];
+  const mult  = getPreviewMult(name);
+  if (mult > 1.0 && entry) {
+    const remaining = entry.lastDone + STREAK_WINDOW - Date.now();
+    const days  = Math.floor(remaining / (24 * 60 * 60 * 1000));
+    const hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+    const timeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+    badge.textContent   = '×' + mult.toFixed(2) + ' · ' + timeStr;
     badge.style.display = '';
   } else {
     badge.style.display = 'none';
@@ -127,13 +133,19 @@ function updatePreview(entryDiv) {
 
   if (perSets && perSets.length > 0) {
     perSets.forEach(s => {
-      const ex = { name, weight: s.weight, reps: s.reps, sets: 1 };
-      xp       += Math.round(calcExerciseXP(ex) * mult);
-      const g   = Math.round(calcStatGain(ex) * mult);
-      statGain += g;
-      if (!exercise.timed && !exercise.running && s.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && g > 0)
-        vitBonus += Math.max(1, Math.floor(g * 0.3));
+      xp += Math.round(calcExerciseXP({ name, weight: s.weight, reps: s.reps, sets: 1 }) * mult);
     });
+    // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
+    const totalEffort = perSets.reduce((sum, s) =>
+      sum + s.weight * Math.sqrt(s.reps) * exercise.coeff * exercise.difficultyCoeff, 0);
+    const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
+    const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
+                     exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :
+                     baseGain;
+    statGain = Math.round(rawGain * mult);
+    if (exercise.stat !== 'VIT' && statGain > 0 &&
+        perSets.some(s => s.reps >= CONFIG.vitRepThreshold))
+      vitBonus = Math.max(1, Math.floor(statGain * 0.3));
   } else {
     const weight = parseWeight(entryDiv.querySelector('.ex-weight').value);
     const reps   = parseInt(entryDiv.querySelector('.ex-reps').value) || 0;
@@ -150,7 +162,10 @@ function updatePreview(entryDiv) {
   if (goldGain > 0)    text += ' · +' + goldGain + ' gold';
   if (staminaGain > 0) text += ' · +' + staminaGain + ' stamina';
   if (exercise.timed) {
-    if (statGain > 0) text += ' · +' + statGain + ' VIT';
+    if (statGain > 0) {
+      if (exercise.stat !== 'VIT') text += ' · +' + statGain + ' ' + exercise.stat;
+      text += ' · +' + statGain + ' VIT';
+    }
   } else {
     if (statGain > 0) text += ' · +' + statGain + ' ' + exercise.stat;
     if (vitBonus > 0) text += ' · +' + vitBonus + ' VIT';
@@ -361,21 +376,35 @@ export function logWorkout() {
   exercises.forEach(ex => {
     const mult     = streakMults[ex.name] ?? 1.0;
     const exercise = EXERCISES.find(e => e.name === ex.name);
-    const sets     = ex.perSets
+    const units    = ex.perSets
       ? ex.perSets.map(s => ({ name: ex.name, weight: s.weight, reps: s.reps, sets: 1 }))
       : [ex];
-    sets.forEach(unitEx => {
-      totalXP += Math.round(calcExerciseXP(unitEx) * mult);
-      if (exercise) {
-        const gain = Math.round(calcStatGain(unitEx) * mult);
+    units.forEach(u => totalXP += Math.round(calcExerciseXP(u) * mult));
+    if (!exercise) return;
+    if (ex.perSets && !exercise.timed && !exercise.running) {
+      // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
+      const totalEffort = ex.perSets.reduce((sum, s) =>
+        sum + s.weight * Math.sqrt(s.reps) * exercise.coeff * exercise.difficultyCoeff, 0);
+      const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
+      const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
+                       exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :
+                       baseGain;
+      const gain = Math.round(rawGain * mult);
+      statGains[exercise.stat] += gain;
+      if (exercise.stat !== 'VIT' && gain > 0 &&
+          ex.perSets.some(s => s.reps >= CONFIG.vitRepThreshold))
+        statGains.VIT += Math.max(1, Math.floor(gain * 0.3));
+    } else {
+      units.forEach(u => {
+        const gain = Math.round(calcStatGain(u) * mult);
         statGains[exercise.stat] += gain;
         if (exercise.timed) {
           statGains.VIT += gain;
-        } else if (!exercise.timed && !exercise.running && unitEx.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && gain > 0) {
+        } else if (u.reps >= CONFIG.vitRepThreshold && exercise.stat !== 'VIT' && gain > 0) {
           statGains.VIT += Math.max(1, Math.floor(gain * 0.3));
         }
-      }
-    });
+      });
+    }
   });
 
   totalXP += CONFIG.sessionBonusXP;
@@ -410,6 +439,7 @@ export function logWorkout() {
   s.xp      += totalXP;
 
   const { leveled, newAbility } = checkLevelUp();
+  if (leveled) { s.shopStock = generateShopStock(); }
 
   const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   s.history.unshift({

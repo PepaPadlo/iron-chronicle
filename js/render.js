@@ -1,13 +1,37 @@
 import { store }          from './store.js';
 import { CONFIG }          from './config.js';
-import { SLOTS, TIERS, ARMOR_SLOTS, RARE_SELL_MULT,
+import { SLOTS, TIERS, ARMOR_SLOTS,
          DUNGEON_BOSSES, ABILITIES, LEVELS }  from './data.js';
 import { getCombatStats, getLevelData,
          getCurrentLevelXP, getCurrentLevelMax } from './state.js';
 import { getItemSpriteStyle, itemSpriteHtml,
          weaponSpriteStyle, offhandSpriteStyle,
          jewelrySpriteStyle, armorSpriteStyle,
-         formatItemStats, formatItemStatsDetailed } from './items.js';
+         formatItemStats, formatItemStatsDetailed,
+         itemRarity, itemSellPrice } from './items.js';
+
+function _rarityClass(item) {
+  const r = itemRarity(item);
+  return r !== 'common' ? r : '';
+}
+function _rarityColor(item) {
+  const r = itemRarity(item);
+  if (r === 'epic')     return 'var(--epic-purple)';
+  if (r === 'rare')     return 'var(--rare-blue)';
+  if (r === 'uncommon') return 'var(--uncommon-green)';
+  return 'var(--text)';
+}
+function _rarityLabel(item) {
+  const r = itemRarity(item);
+  if (r === 'epic')     return 'Epic';
+  if (r === 'rare')     return 'Rare';
+  if (r === 'uncommon') return 'Uncommon';
+  return '';
+}
+function _rarityGem(item) {
+  const r = itemRarity(item);
+  return r !== 'common' ? `<svg class="rarity-gem ${r}"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>` : '';
+}
 import { t }               from './i18n.js';
 
 // ── Tab / selective rendering ─────────────────────────────────
@@ -77,18 +101,19 @@ function _itemTooltipSprite(item) {
 }
 
 export function showGearTooltip(item, e) {
-  const tip  = document.getElementById('gearTooltip');
-  const tier = TIERS.find(tr => tr.tier === item.tier);
-  const gem  = item.rare ? '<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>' : '';
+  const tip   = document.getElementById('gearTooltip');
+  const tier  = TIERS.find(tr => tr.tier === item.tier);
+  const rc    = _rarityClass(item);
+  const rl    = _rarityLabel(item);
   const stats = Object.keys(item.bonuses).map(s =>
     `<div class="gear-tooltip-stat">+${item.bonuses[s]} ${s}</div>`).join('');
   tip.innerHTML =
     _itemTooltipSprite(item) +
-    `<div class="gear-tooltip-name${item.rare ? ' rare' : ''}">` +
-      gem + item.name.replace(/^✦\s*/, '') +
+    `<div class="gear-tooltip-name${rc ? ' ' + rc : ''}">` +
+      _rarityGem(item) + item.name.replace(/^[◆✦★]\s*/, '') +
     `</div><div class="gear-tooltip-meta">` +
       item.slotName + ' · ' + tier.name +
-      (item.rare ? ' · <span style="color:var(--rare-blue)">Rare</span>' : '') +
+      (rl ? ` · <span style="color:${_rarityColor(item)}">${rl}</span>` : '') +
       ' · Req Lv ' + item.levelReq +
     `</div>` + stats;
   tip.classList.add('show');
@@ -98,7 +123,8 @@ export function showGearTooltip(item, e) {
 export function showItemTooltip(item, e) {
   const tip  = document.getElementById('gearTooltip');
   const tier = TIERS.find(tr => tr.tier === item.tier);
-  const gem  = item.rare ? '<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>' : '';
+  const rc   = _rarityClass(item);
+  const rl   = _rarityLabel(item);
   const stats = Object.keys(item.bonuses).map(s =>
     `<div class="gear-tooltip-stat">+${item.bonuses[s]} ${s}</div>`).join('');
 
@@ -108,24 +134,24 @@ export function showItemTooltip(item, e) {
     ? store.state.equipped[equippedSlotId]
     : (store.state.equipped.ring1 || store.state.equipped.ring2);
   if (equippedItem) {
-    const eGem   = equippedItem.rare ? '<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>' : '';
+    const erc    = _rarityClass(equippedItem);
     const eStats = Object.keys(equippedItem.bonuses).map(s =>
       `<div class="gear-tooltip-stat">+${equippedItem.bonuses[s]} ${s}</div>`).join('');
     compareHtml =
       `<div class="gear-tooltip-divider">${t('tooltip_equipped')}</div>` +
       _itemTooltipSprite(equippedItem) +
-      `<div class="gear-tooltip-name${equippedItem.rare ? ' rare' : ''}">` +
-        eGem + equippedItem.name.replace(/^✦\s*/, '') +
+      `<div class="gear-tooltip-name${erc ? ' ' + erc : ''}">` +
+        _rarityGem(equippedItem) + equippedItem.name.replace(/^[◆✦★]\s*/, '') +
       `</div>` + eStats;
   }
 
   tip.innerHTML =
     _itemTooltipSprite(item) +
-    `<div class="gear-tooltip-name${item.rare ? ' rare' : ''}">` +
-      gem + item.name.replace(/^✦\s*/, '') +
+    `<div class="gear-tooltip-name${rc ? ' ' + rc : ''}">` +
+      _rarityGem(item) + item.name.replace(/^[◆✦★]\s*/, '') +
     `</div><div class="gear-tooltip-meta">` +
       item.slotName + ' · ' + tier.name +
-      (item.rare ? ' · <span style="color:var(--rare-blue)">Rare</span>' : '') +
+      (rl ? ` · <span style="color:${_rarityColor(item)}">${rl}</span>` : '') +
       ' · ' + t('tooltip_req_lv') + ' ' + item.levelReq +
     `</div>` + stats + compareHtml;
   tip.classList.add('show');
@@ -425,7 +451,8 @@ function renderGear() {
   SLOTS.forEach(slot => {
     const item = store.state.equipped[slot.id];
     const div  = document.createElement('div');
-    div.className = 'equip-slot' + (item ? ' has-item' : '') + (item && item.rare ? ' rare' : '');
+    const rc = item ? _rarityClass(item) : '';
+    div.className = 'equip-slot' + (item ? ' has-item' : '') + (rc ? ' ' + rc : '');
     div.dataset.slot = slot.id;
     const sp  = _spriteStyle(item, 36);
     const ico = sp ? `<div style="${sp}"></div>` : svgUse(slotIconId(slot.id));
@@ -447,17 +474,16 @@ function renderInventory() {
   }
   panel.innerHTML = '';
   s.inventory.forEach(item => {
-    const tier     = TIERS.find(tr => tr.tier === item.tier);
-    const sellPrice = item.rare ? tier.sellPrice * RARE_SELL_MULT : tier.sellPrice;
+    const sellPrice = itemSellPrice(item);
     const canEquip  = s.level >= item.levelReq;
+    const rc        = _rarityClass(item);
     const div = document.createElement('div');
-    div.className = 'inventory-item' + (item.rare ? ' rare' : '');
-    const gem      = item.rare ? '<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>' : '';
+    div.className = 'inventory-item' + (rc ? ' ' + rc : '');
     const slotIcon = `<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#${slotIconId(item.slotId)}" xlink:href="#${slotIconId(item.slotId)}"/></svg>`;
     div.innerHTML =
       itemSpriteHtml(item, 40) +
       `<div class="inv-info">` +
-        `<div class="inv-name ${item.rare ? 'rare' : ''}">${gem}${item.name.replace(/^✦\s*/, '')}</div>` +
+        `<div class="inv-name${rc ? ' ' + rc : ''}">${_rarityGem(item)}${item.name.replace(/^[◆✦★]\s*/, '')}</div>` +
         `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)} · ${t('inv_req_lvl')} ${item.levelReq}</div>` +
       `</div>` +
       `<div class="inv-actions">` +
@@ -507,7 +533,8 @@ function renderShop() {
     SLOTS.forEach(slot => {
       const item = s.equipped[slot.id];
       const div  = document.createElement('div');
-      div.className = 'equip-slot' + (item ? ' has-item' : '') + (item && item.rare ? ' rare' : '');
+      const src = item ? _rarityClass(item) : '';
+      div.className = 'equip-slot' + (item ? ' has-item' : '') + (src ? ' ' + src : '');
       div.dataset.slot = slot.id;
       const sp  = _spriteStyle(item, 36);
       const ico = sp ? `<div style="${sp}"></div>` : svgUse(slotIconId(slot.id));

@@ -40,7 +40,9 @@ export const CONFIG = {
   bossDefScale:         2,
   dungeonGoldMult:      25,
   dungeonXPMult:        30,
-  bossRareDropChance:   0.40,
+  bossDropUncommon:     0.40,   // 40 % → uncommon (green)
+  bossDropRare:         0.40,   // 40 % → rare     (blue)
+  bossDropEpic:         0.20,   // 20 % → epic     (purple)
 
   // ── Shop ──────────────────────────────────────────────────────
   shopSize:             5,

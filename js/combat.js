@@ -243,26 +243,35 @@ export function endCombat(won, fled) {
     if (!store.state.dungeonsClearedThisWeek.includes(combat.level))
       store.state.dungeonsClearedThisWeek.push(combat.level);
 
-    const dropCount   = 1 + Math.floor(Math.random() * 3);
-    const bossTier    = TIERS[Math.min(Math.floor((combat.level - 1) / 2), TIERS.length - 1)];
+    const dropCount    = 2 + Math.floor(Math.random() * 2);   // 2–3 items
+    const bossTier     = TIERS[Math.min(Math.floor((combat.level - 1) / 2), TIERS.length - 1)];
     const itemsDropped = [];
     for (let i = 0; i < dropCount; i++) {
       const slotId = SLOTS[Math.floor(Math.random() * SLOTS.length)].id;
-      itemsDropped.push(generateItem(slotId, bossTier, undefined, CONFIG.bossRareDropChance));
+      const roll   = Math.random();
+      const rarity = roll < CONFIG.bossDropEpic     ? 'epic'
+                   : roll < CONFIG.bossDropEpic + CONFIG.bossDropRare ? 'rare'
+                   : 'uncommon';
+      itemsDropped.push(generateItem(slotId, bossTier, rarity));
     }
     itemsDropped.forEach(item => store.state.inventory.push(item));
 
     const { leveled, newAbility } = checkLevelUp();
     playSound('victory');
 
-    const anyRare   = itemsDropped.some(i => i.rare);
-    const itemsHtml = itemsDropped.map(item => {
+    const rarityColor = r => r === 'epic' ? 'var(--epic-purple)' : r === 'rare' ? 'var(--rare-blue)' : r === 'uncommon' ? 'var(--uncommon-green)' : 'var(--text)';
+    const topRarity   = itemsDropped.reduce((best, i) => {
+      const order = { epic:3, rare:2, uncommon:1, common:0 };
+      return (order[i.rarity] ?? 0) > (order[best] ?? 0) ? i.rarity : best;
+    }, 'uncommon');
+    const borderColor = rarityColor(topRarity);
+    const itemsHtml   = itemsDropped.map(item => {
       const { itemSpriteHtml, formatItemStats } = _itemHelpers();
+      const col = rarityColor(item.rarity);
       return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">` +
              itemSpriteHtml(item, 40) +
-             `<div><div style="color:${item.rare ? 'var(--rare-blue)' : 'var(--text)'};font-size:14px;">` +
-             (item.rare ? '<svg class="rarity-gem"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>' : '') +
-             item.name.replace(/^✦\s*/, '') +
+             `<div><div style="color:${col};font-size:14px;">` +
+             item.name.replace(/^[◆✦★]\s*/, '') +
              `</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${formatItemStats(item)}</div></div></div>`;
     }).join('');
 
@@ -270,7 +279,7 @@ export function endCombat(won, fled) {
            `<div style="margin-bottom:10px;font-style:italic;color:var(--text-dim);">${combat.bossName} falls before you.</div>` +
            `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;">` +
            `<span class="reward-chip xp">+${xpWin} XP</span><span class="reward-chip gold">+${goldWin} Gold</span></div>` +
-           `<div style="padding:10px;border:1px solid ${anyRare ? 'var(--rare-blue)' : 'var(--border-gold)'};margin-bottom:10px;border-radius:1px;">` +
+           `<div style="padding:10px;border:1px solid ${borderColor};margin-bottom:10px;border-radius:1px;">` +
            `<div style="font-family:Cinzel,serif;font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">ITEMS FOUND (${dropCount})</div>` +
            itemsHtml +
            `</div><button class="btn btn-primary" id="btnExitCombat">Leave the Depths</button></div>`;

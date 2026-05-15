@@ -2,7 +2,8 @@ import { store }          from './store.js';
 import { CONFIG }          from './config.js';
 import { STORAGE_KEY }     from './data.js';
 import { loadState, saveState, parseWeight } from './state.js';
-import { TIERS, RARE_SELL_MULT } from './data.js';
+import { TIERS } from './data.js';
+import { itemSellPrice } from './items.js';
 import { generateShopStock } from './items.js';
 import { t }               from './i18n.js';
 import { renderAll, switchTab, hideGearTooltip } from './render.js';
@@ -68,8 +69,7 @@ function sellItem(itemId) {
   const idx = store.state.inventory.findIndex(i => i.id === itemId);
   if (idx < 0) return;
   const item  = store.state.inventory[idx];
-  const tier  = TIERS.find(t => t.tier === item.tier);
-  const price = item.rare ? tier.sellPrice * RARE_SELL_MULT : tier.sellPrice;
+  const price = itemSellPrice(item);
   store.state.gold += price;
   store.state.inventory.splice(idx, 1);
   saveState();
@@ -141,7 +141,7 @@ function init() {
       store.state.shopStock = generateShopStock();
     }
 
-    document.getElementById('gameVersion').textContent = 'v0.21 · 2026-04-24';
+    document.getElementById('gameVersion').textContent = 'v0.24 · 2026-05-15';
 
     // Static button listeners
     document.getElementById('btnAddExercise').addEventListener('click', addExercise);

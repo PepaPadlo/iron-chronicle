@@ -2,7 +2,7 @@ import { store }  from './store.js';
 import { CONFIG }  from './config.js';
 import { SLOTS, TIERS, ARMOR_SLOTS, ITEM_NAMES,
          WEAPON_SPRITES, WEAPON_CAT_MAP, OFFHAND_SPRITES,
-         JEWELRY_SPRITES, SLOT_SPRITE_CONFIG } from './data.js';
+         JEWELRY_SPRITES, SLOT_SPRITE_CONFIG, RARITY_SELL_MULT } from './data.js';
 import { assignItemSprite, makeItemId } from './state.js';
 
 // ── Tier selection ────────────────────────────────────────────
@@ -19,12 +19,26 @@ export function pickTierForLevel(playerLevel) {
   return available[available.length - 1];
 }
 
+// ── Rarity helpers ────────────────────────────────────────────
+// Returns the canonical rarity string for any item (handles legacy rare:true items).
+export function itemRarity(item) {
+  if (item.rarity) return item.rarity;
+  if (item.rare)   return 'rare';   // legacy items keep blue
+  return 'common';
+}
+
+export function itemSellPrice(item) {
+  const tier = TIERS.find(t => t.tier === item.tier);
+  if (!tier) return 0;
+  const mult = RARITY_SELL_MULT[itemRarity(item)] ?? 1;
+  return tier.sellPrice * mult;
+}
+
 // ── Item generation ───────────────────────────────────────────
-// Sprite is resolved via the shared assignItemSprite — no duplicate logic.
-export function generateItem(slotId, forceTier, forceRare, rareChance) {
-  const slot   = SLOTS.find(s => s.id === slotId);
-  const tier   = forceTier || pickTierForLevel(store.state ? store.state.level : 1);
-  const isRare = typeof forceRare === 'boolean' ? forceRare : (Math.random() < (rareChance || 0));
+// rarity: 'common' | 'uncommon' | 'rare' | 'epic'  (default 'common')
+export function generateItem(slotId, forceTier, rarity = 'common') {
+  const slot = SLOTS.find(s => s.id === slotId);
+  const tier = forceTier || pickTierForLevel(store.state ? store.state.level : 1);
 
   let possibleStats = slot.stats.slice();
   if (slotId === 'amulet' || slotId === 'weapon' || slotId === 'offhand') {
@@ -33,15 +47,18 @@ export function generateItem(slotId, forceTier, forceRare, rareChance) {
 
   const bonuses = {};
   possibleStats.forEach(stat => {
-    const min = isRare ? tier.rareMinBonus : tier.minBonus;
-    const max = isRare ? tier.rareMaxBonus : tier.maxBonus;
+    let min, max;
+    if      (rarity === 'uncommon') { min = tier.uncommonMin; max = tier.uncommonMax; }
+    else if (rarity === 'rare')     { min = tier.rareMin;     max = tier.rareMax;     }
+    else if (rarity === 'epic')     { min = tier.epicMin;     max = tier.epicMax;     }
+    else                            { min = tier.minBonus;    max = tier.maxBonus;    }
     bonuses[stat] = min + Math.floor(Math.random() * (max - min + 1));
     if (slotId === 'amulet') bonuses[stat] = Math.floor(bonuses[stat] * 1.3);
   });
 
+  const prefix   = rarity === 'uncommon' ? '◆ ' : rarity === 'rare' ? '✦ ' : rarity === 'epic' ? '★ ' : '';
   const nameBase = ITEM_NAMES[slotId][Math.floor(Math.random() * ITEM_NAMES[slotId].length)];
-  const baseName = tier.name + ' ' + nameBase;
-  const name     = isRare ? '✦ ' + baseName : baseName;
+  const name     = prefix + tier.name + ' ' + nameBase;
 
   const item = {
     id:       makeItemId(),
@@ -51,12 +68,11 @@ export function generateItem(slotId, forceTier, forceRare, rareChance) {
     tier:     tier.tier,
     tierName: tier.name,
     levelReq: tier.levelReq,
-    rare:     isRare,
+    rarity,
     bonuses,
     spriteIdx: null,
   };
 
-  // Single call — no duplicated sprite logic
   assignItemSprite(item);
   return item;
 }
@@ -124,7 +140,7 @@ export function generateShopStock() {
   const tier  = avail.length ? avail[avail.length - 1] : TIERS[0];
   for (let i = 0; i < CONFIG.shopSize; i++) {
     const slotId = SLOTS[Math.floor(Math.random() * SLOTS.length)].id;
-    stock.push(generateItem(slotId, tier, false));
+    stock.push(generateItem(slotId, tier, 'common'));
   }
   return stock;
 }

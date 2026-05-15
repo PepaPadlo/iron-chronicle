@@ -49,20 +49,21 @@ export const SLOTS = [
 export const ARMOR_SLOTS = ['helmet','chest','gloves','belt','boots'];
 
 export const TIERS = [
-  { tier:1,  name:'Rough Iron',     levelReq:1,  minBonus:0,  maxBonus:1,  rareMinBonus:1,  rareMaxBonus:2,  shopPrice:80,   sellPrice:15  },
-  { tier:2,  name:'Hardened Steel', levelReq:3,  minBonus:1,  maxBonus:2,  rareMinBonus:2,  rareMaxBonus:3,  shopPrice:180,  sellPrice:30  },
-  { tier:3,  name:'Shadowforged',   levelReq:5,  minBonus:1,  maxBonus:3,  rareMinBonus:2,  rareMaxBonus:4,  shopPrice:350,  sellPrice:45  },
-  { tier:4,  name:'Dragonbone',     levelReq:7,  minBonus:2,  maxBonus:4,  rareMinBonus:3,  rareMaxBonus:5,  shopPrice:600,  sellPrice:60  },
-  { tier:5,  name:'Legendary',      levelReq:9,  minBonus:3,  maxBonus:5,  rareMinBonus:4,  rareMaxBonus:7,  shopPrice:950,  sellPrice:75  },
-  { tier:6,  name:'Bloodforged',    levelReq:11, minBonus:4,  maxBonus:6,  rareMinBonus:5,  rareMaxBonus:9,  shopPrice:1400, sellPrice:100 },
-  { tier:7,  name:'Voidsteel',      levelReq:13, minBonus:5,  maxBonus:7,  rareMinBonus:6,  rareMaxBonus:10, shopPrice:2000, sellPrice:135 },
-  { tier:8,  name:'Soulbound',      levelReq:15, minBonus:6,  maxBonus:9,  rareMinBonus:7,  rareMaxBonus:12, shopPrice:2800, sellPrice:175 },
-  { tier:9,  name:'Abyssal',        levelReq:17, minBonus:8,  maxBonus:11, rareMinBonus:9,  rareMaxBonus:14, shopPrice:3800, sellPrice:225 },
-  { tier:10, name:'Eternal Forge',  levelReq:19, minBonus:10, maxBonus:14, rareMinBonus:12, rareMaxBonus:18, shopPrice:5000, sellPrice:285 },
+  { tier:1,  name:'Rough Iron',     levelReq:1,  minBonus:0,  maxBonus:1,  uncommonMin:2,  uncommonMax:3,  rareMin:4,  rareMax:5,  epicMin:6,  epicMax:7,  shopPrice:80,   sellPrice:15  },
+  { tier:2,  name:'Hardened Steel', levelReq:3,  minBonus:2,  maxBonus:3,  uncommonMin:4,  uncommonMax:5,  rareMin:6,  rareMax:7,  epicMin:8,  epicMax:9,  shopPrice:180,  sellPrice:30  },
+  { tier:3,  name:'Shadowforged',   levelReq:5,  minBonus:4,  maxBonus:5,  uncommonMin:7,  uncommonMax:8,  rareMin:9,  rareMax:10, epicMin:11, epicMax:13, shopPrice:350,  sellPrice:45  },
+  { tier:4,  name:'Dragonbone',     levelReq:7,  minBonus:6,  maxBonus:7,  uncommonMin:10, uncommonMax:11, rareMin:12, rareMax:13, epicMin:14, epicMax:18, shopPrice:600,  sellPrice:60  },
+  { tier:5,  name:'Legendary',      levelReq:9,  minBonus:8,  maxBonus:9,  uncommonMin:13, uncommonMax:14, rareMin:15, rareMax:17, epicMin:19, epicMax:23, shopPrice:950,  sellPrice:75  },
+  { tier:6,  name:'Bloodforged',    levelReq:11, minBonus:10, maxBonus:11, uncommonMin:15, uncommonMax:17, rareMin:18, rareMax:21, epicMin:24, epicMax:28, shopPrice:1400, sellPrice:100 },
+  { tier:7,  name:'Voidsteel',      levelReq:13, minBonus:12, maxBonus:13, uncommonMin:18, uncommonMax:20, rareMin:22, rareMax:25, epicMin:29, epicMax:33, shopPrice:2000, sellPrice:135 },
+  { tier:8,  name:'Soulbound',      levelReq:15, minBonus:14, maxBonus:16, uncommonMin:22, uncommonMax:24, rareMin:26, rareMax:30, epicMin:34, epicMax:40, shopPrice:2800, sellPrice:175 },
+  { tier:9,  name:'Abyssal',        levelReq:17, minBonus:17, maxBonus:20, uncommonMin:28, uncommonMax:30, rareMin:31, rareMax:38, epicMin:41, epicMax:50, shopPrice:3800, sellPrice:225 },
+  { tier:10, name:'Eternal Forge',  levelReq:19, minBonus:21, maxBonus:25, uncommonMin:35, uncommonMax:38, rareMin:39, rareMax:48, epicMin:51, epicMax:63, shopPrice:5000, sellPrice:285 },
 ];
 
-export const RARE_MULT      = 1.2;
-export const RARE_SELL_MULT = 2;
+export const RARE_MULT        = 1.2;
+export const RARE_SELL_MULT   = 2;                            // legacy rare items only
+export const RARITY_SELL_MULT = { common:1, uncommon:2, rare:3, epic:5 };
 
 export const ITEM_NAMES = {
   weapon:  ['Blade','Axe','Hammer','Maul','Cleaver','Saber','Club','Spear','Mace'],
