@@ -141,7 +141,7 @@ function init() {
       store.state.shopStock = generateShopStock();
     }
 
-    document.getElementById('gameVersion').textContent = 'v0.24 · 2026-05-15';
+    document.getElementById('gameVersion').textContent = 'v0.25 · 2026-05-15';
 
     // Static button listeners
     document.getElementById('btnAddExercise').addEventListener('click', addExercise);

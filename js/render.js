@@ -260,6 +260,13 @@ function renderQuest() {
       ? base + ` <span style="color:var(--gold-light);font-size:11px;">✦ +${pct}%</span>`
       : base;
   }
+
+  const weekEnd   = s.weekStart + 7 * 24 * 60 * 60 * 1000;
+  const remaining = weekEnd - Date.now();
+  const days      = Math.floor(remaining / (24 * 60 * 60 * 1000));
+  const hours     = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const timeStr   = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+  document.getElementById('questTimer').textContent = `Resets in ${timeStr}`;
 }
 
 // ── History tab ───────────────────────────────────────────────
