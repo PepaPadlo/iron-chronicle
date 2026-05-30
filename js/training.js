@@ -34,7 +34,7 @@ export function calcExerciseXP(ex) {
   if (!exercise) return 0;
   if (exercise.timed || exercise.running)
     return Math.round(ex.reps * exercise.coeff);
-  return Math.round(ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff * exercise.difficultyCoeff / CONFIG.xpDivisor);
+  return Math.round(ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff / CONFIG.xpDivisor);
 }
 
 export function calcStatGain(ex) {
@@ -46,7 +46,7 @@ export function calcStatGain(ex) {
       ? Math.floor(raw * CONFIG.statYieldRunning)
       : Math.floor(raw * CONFIG.statYieldActivity);
   }
-  const effort = ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff * exercise.difficultyCoeff;
+  const effort = ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff;
   const gain   = Math.floor(effort / CONFIG.statGainDivisor);
   if (exercise.stat === 'STR') return Math.floor(gain * CONFIG.statYieldSTR);
   if (exercise.stat === 'DEX') return Math.floor(gain * CONFIG.statYieldDEX);
@@ -137,7 +137,7 @@ function updatePreview(entryDiv) {
     });
     // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
     const totalEffort = perSets.reduce((sum, s) =>
-      sum + s.weight * Math.sqrt(s.reps) * exercise.coeff * exercise.difficultyCoeff, 0);
+      sum + s.weight * Math.sqrt(s.reps) * exercise.coeff, 0);
     const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
     const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
                      exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :
@@ -384,7 +384,7 @@ export function logWorkout() {
     if (ex.perSets && !exercise.timed && !exercise.running) {
       // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
       const totalEffort = ex.perSets.reduce((sum, s) =>
-        sum + s.weight * Math.sqrt(s.reps) * exercise.coeff * exercise.difficultyCoeff, 0);
+        sum + s.weight * Math.sqrt(s.reps) * exercise.coeff, 0);
       const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
       const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
                        exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :

@@ -27,7 +27,6 @@ function buyItem(idx) {
   if (!item) return;
   const tier = TIERS.find(t => t.tier === item.tier);
   if (store.state.gold < tier.shopPrice) { toast('Not enough gold.'); return; }
-  if (store.state.level < item.levelReq) { toast('Requires level ' + item.levelReq + '.'); return; }
   store.state.gold -= tier.shopPrice;
   store.state.inventory.push(item);
   store.state.shopStock.splice(idx, 1);
@@ -40,13 +39,7 @@ function equipItem(itemId) {
   const idx = store.state.inventory.findIndex(i => i.id === itemId);
   if (idx < 0) return;
   const item = store.state.inventory[idx];
-  if (store.state.level < item.levelReq) { toast('Requires level ' + item.levelReq + '.'); return; }
-  let targetSlot = item.slotId;
-  if (item.slotId === 'ring1' || item.slotId === 'ring2') {
-    if (!store.state.equipped.ring1) targetSlot = 'ring1';
-    else if (!store.state.equipped.ring2) targetSlot = 'ring2';
-    else targetSlot = 'ring1';
-  }
+  const targetSlot = item.slotId === 'ring2' ? 'ring1' : item.slotId;
   item.slotId = targetSlot;
   const current = store.state.equipped[targetSlot];
   store.state.inventory.splice(idx, 1);

@@ -85,7 +85,7 @@ function applyTranslations() {
 
 // ── Slot / SVG helpers ────────────────────────────────────────
 function slotIconId(slotId) {
-  return (slotId === 'ring1' || slotId === 'ring2') ? 'icon-ring' : 'icon-' + slotId;
+  return slotId === 'ring1' ? 'icon-ring' : 'icon-' + slotId;
 }
 function svgUse(id) {
   return `<svg class="slot-icon"><use href="#${id}" xlink:href="#${id}"/></svg>`;
@@ -114,7 +114,7 @@ export function showGearTooltip(item, e) {
     `</div><div class="gear-tooltip-meta">` +
       item.slotName + ' · ' + tier.name +
       (rl ? ` · <span style="color:${_rarityColor(item)}">${rl}</span>` : '') +
-      ' · Req Lv ' + item.levelReq +
+      ' · iLvl ' + item.levelReq +
     `</div>` + stats;
   tip.classList.add('show');
   _positionTooltip(e);
@@ -129,10 +129,9 @@ export function showItemTooltip(item, e) {
     `<div class="gear-tooltip-stat">+${item.bonuses[s]} ${s}</div>`).join('');
 
   let compareHtml = '';
-  const equippedSlotId = (item.slotId === 'ring1' || item.slotId === 'ring2') ? null : item.slotId;
-  const equippedItem   = equippedSlotId
-    ? store.state.equipped[equippedSlotId]
-    : (store.state.equipped.ring1 || store.state.equipped.ring2);
+  const equippedItem = item.slotId === 'ring1'
+    ? store.state.equipped.ring1
+    : store.state.equipped[item.slotId];
   if (equippedItem) {
     const erc    = _rarityClass(equippedItem);
     const eStats = Object.keys(equippedItem.bonuses).map(s =>
@@ -152,7 +151,7 @@ export function showItemTooltip(item, e) {
     `</div><div class="gear-tooltip-meta">` +
       item.slotName + ' · ' + tier.name +
       (rl ? ` · <span style="color:${_rarityColor(item)}">${rl}</span>` : '') +
-      ' · ' + t('tooltip_req_lv') + ' ' + item.levelReq +
+      ' · iLvl ' + item.levelReq +
     `</div>` + stats + compareHtml;
   tip.classList.add('show');
   _positionTooltip(e);
@@ -446,7 +445,7 @@ function _spriteStyle(item, size) {
   if (!item || item.spriteIdx == null) return null;
   if (item.slotId === 'weapon')  return weaponSpriteStyle(item.spriteIdx, size);
   if (item.slotId === 'offhand') return offhandSpriteStyle(item.spriteIdx, size);
-  if (item.slotId === 'amulet' || item.slotId === 'ring1' || item.slotId === 'ring2')
+  if (item.slotId === 'amulet' || item.slotId === 'ring1')
     return jewelrySpriteStyle(item.spriteIdx, size);
   if (ARMOR_SLOTS.indexOf(item.slotId) !== -1) return armorSpriteStyle(item.slotId, item.spriteIdx, size);
   return null;
@@ -482,7 +481,6 @@ function renderInventory() {
   panel.innerHTML = '';
   s.inventory.forEach(item => {
     const sellPrice = itemSellPrice(item);
-    const canEquip  = s.level >= item.levelReq;
     const rc        = _rarityClass(item);
     const div = document.createElement('div');
     div.className = 'inventory-item' + (rc ? ' ' + rc : '');
@@ -491,10 +489,10 @@ function renderInventory() {
       itemSpriteHtml(item, 40) +
       `<div class="inv-info">` +
         `<div class="inv-name${rc ? ' ' + rc : ''}">${_rarityGem(item)}${item.name.replace(/^[◆✦★]\s*/, '')}</div>` +
-        `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)} · ${t('inv_req_lvl')} ${item.levelReq}</div>` +
+        `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)} · iLvl ${item.levelReq}</div>` +
       `</div>` +
       `<div class="inv-actions">` +
-        `<button class="btn btn-primary btn-sm"${!canEquip ? ' disabled' : ''} data-equip="${item.id}">${t('inv_equip')}</button>` +
+        `<button class="btn btn-primary btn-sm" data-equip="${item.id}">${t('inv_equip')}</button>` +
         `<button class="btn btn-ghost btn-sm" data-sell="${item.id}">${t('inv_sell')} ${sellPrice}g</button>` +
       `</div>`;
     _addTooltipListeners(div, e => showItemTooltip(item, e));
@@ -518,7 +516,6 @@ function renderShop() {
     s.shopStock.forEach((item, idx) => {
       const tier      = TIERS.find(tr => tr.tier === item.tier);
       const canAfford = s.gold >= tier.shopPrice;
-      const canLevel  = s.level >= item.levelReq;
       const div = document.createElement('div');
       div.className = 'shop-item';
       const slotIcon = `<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:6px;"><use href="#${slotIconId(item.slotId)}" xlink:href="#${slotIconId(item.slotId)}"/></svg>`;
@@ -526,9 +523,9 @@ function renderShop() {
         itemSpriteHtml(item, 40) +
         `<div class="inv-info">` +
           `<div class="inv-name">${item.name}</div>` +
-          `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)} · ${t('inv_req_lvl')} ${item.levelReq}</div>` +
+          `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)} · iLvl ${item.levelReq}</div>` +
         `</div>` +
-        `<button class="btn btn-primary btn-sm"${(!canAfford || !canLevel) ? ' disabled' : ''} data-buy="${idx}">${tier.shopPrice}g</button>`;
+        `<button class="btn btn-primary btn-sm"${!canAfford ? ' disabled' : ''} data-buy="${idx}">${tier.shopPrice}g</button>`;
       _addTooltipListeners(div, e => showItemTooltip(item, e));
       panel.appendChild(div);
     });

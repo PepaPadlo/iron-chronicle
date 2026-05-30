@@ -77,7 +77,7 @@ export function assignItemSprite(item) {
                        .sort((a, b) => a.s.row - b.s.row || a.s.col - b.s.col);
     item.spriteIdx = cands[Math.round(tierNorm * (cands.length - 1))].i;
 
-  } else if (item.slotId === 'amulet' || item.slotId === 'ring1' || item.slotId === 'ring2') {
+  } else if (item.slotId === 'amulet' || item.slotId === 'ring1') {
     const cat   = item.slotId === 'amulet' ? 'amulet' : 'ring';
     const cands = JEWELRY_SPRITES.map((s, i) => ({ s, i }))
                     .filter(x => x.s.cat === cat)
@@ -95,6 +95,20 @@ export function assignItemSprite(item) {
 
 // ── Migrations ────────────────────────────────────────────────
 export function migrateItems(s) {
+  // Migrate ring2 slot removal
+  if (s.equipped && s.equipped.ring2) {
+    const r2 = s.equipped.ring2;
+    r2.slotId = 'ring1';
+    if (!s.equipped.ring1) {
+      s.equipped.ring1 = r2;
+    } else {
+      if (!s.inventory) s.inventory = [];
+      s.inventory.push(r2);
+    }
+    delete s.equipped.ring2;
+  }
+  if (s.inventory) s.inventory.forEach(i => { if (i.slotId === 'ring2') i.slotId = 'ring1'; });
+
   if (s.inventory) s.inventory.forEach(assignItemSprite);
   if (s.equipped)  Object.values(s.equipped).forEach(assignItemSprite);
   if (s.shopStock) s.shopStock.forEach(assignItemSprite);

@@ -1,4 +1,4 @@
-export const GAME_VERSION = 'v0.32 · 2026-05-06';
+export const GAME_VERSION = 'v0.33 · 2026-05-30';
 export const STORAGE_KEY  = 'ironChronicle_v1';
 
 export const LEVELS = [
@@ -41,8 +41,7 @@ export const SLOTS = [
   { id:'belt',    name:'Belt',     stats:['VIT'] },
   { id:'boots',   name:'Boots',    stats:['DEX'] },
   { id:'amulet',  name:'Amulet',   stats:['STR','DEX','VIT'] },
-  { id:'ring1',   name:'Ring I',   stats:['STR','DEX','VIT'] },
-  { id:'ring2',   name:'Ring II',  stats:['STR','DEX','VIT'] },
+  { id:'ring1',   name:'Ring',     stats:['STR','DEX','VIT'] },
   { id:'offhand', name:'Offhand',  stats:['STR','VIT'] },
 ];
 
@@ -74,7 +73,6 @@ export const ITEM_NAMES = {
   boots:   ['Boots','Greaves','Treads','Stompers','Sabatons'],
   amulet:  ['Amulet','Talisman','Pendant','Charm','Relic'],
   ring1:   ['Ring','Band','Signet','Loop','Circle'],
-  ring2:   ['Ring','Band','Signet','Loop','Circle'],
   offhand: ['Shield','Bulwark','Aegis','Buckler','Tome','Focus','Book','Grimoire'],
 };
 

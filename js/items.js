@@ -121,7 +121,7 @@ export function getItemSpriteStyle(item, size) {
   if (item.spriteIdx == null) return null;
   if (item.slotId === 'weapon')  return weaponSpriteStyle(item.spriteIdx, size);
   if (item.slotId === 'offhand') return offhandSpriteStyle(item.spriteIdx, size);
-  if (item.slotId === 'amulet' || item.slotId === 'ring1' || item.slotId === 'ring2')
+  if (item.slotId === 'amulet' || item.slotId === 'ring1')
     return jewelrySpriteStyle(item.spriteIdx, size);
   if (ARMOR_SLOTS.indexOf(item.slotId) !== -1)
     return armorSpriteStyle(item.slotId, item.spriteIdx, size);
