@@ -1,7 +1,7 @@
 import { store }         from './store.js';
 import { CONFIG }         from './config.js';
 import { ABILITIES, TIERS, SLOTS, DUNGEON_BOSSES } from './data.js';
-import { getCombatStats, saveState, checkLevelUp } from './state.js';
+import { getCombatStats, saveState, checkLevelUp, getStaminaCap } from './state.js';
 import { generateItem }   from './items.js';
 import { playSound }      from './audio.js';
 import { triggerSlash, triggerDamageNumber, triggerShake, triggerScreenFlash,
@@ -30,8 +30,9 @@ export function renderCombat() {
   document.getElementById('bossHpText').textContent  = Math.max(0, combat.bossHP) + ' / ' + combat.bossMaxHP + ' HP';
   document.getElementById('playerHpBar').style.width = Math.max(0, combat.playerHP / combat.playerMaxHP * 100) + '%';
   document.getElementById('playerHpText').textContent = Math.max(0, combat.playerHP) + ' / ' + combat.playerMaxHP + ' HP';
-  document.getElementById('playerStaminaBar').style.width = (combat.playerStamina / CONFIG.staminaCap * 100) + '%';
-  document.getElementById('playerStaminaText').textContent = combat.playerStamina + ' / ' + CONFIG.staminaCap + ' Stamina';
+  const sCap = getStaminaCap();
+  document.getElementById('playerStaminaBar').style.width = (combat.playerStamina / sCap * 100) + '%';
+  document.getElementById('playerStaminaText').textContent = combat.playerStamina + ' / ' + sCap + ' Stamina';
   const logEl = document.getElementById('combatLog');
   logEl.innerHTML = combat.log.join('');
   logEl.scrollTop = logEl.scrollHeight;
@@ -49,7 +50,9 @@ export function renderCombat() {
     if (store.state.level < ab.unlockLvl) return;
     const btn = document.createElement('button');
     btn.className = 'ability-btn';
-    btn.disabled  = combat.playerStamina < ab.cost || combat.ended || combat.waiting;
+    btn.disabled  = combat.playerStamina < ab.cost || combat.ended || combat.waiting ||
+                    (ab.effect === 'leech'    && combat.effects.leechActive) ||
+                    (ab.effect === 'unbroken' && combat.effects.unbrokenUsed);
     btn.innerHTML = `<div class="ability-name">${ab.name}</div>` +
                     `<div class="ability-cost">${ab.cost === 0 ? 'Free' : ab.cost + ' stamina'}</div>` +
                     `<div class="ability-desc">${ab.desc}</div>`;
@@ -92,7 +95,7 @@ export function enterDungeon(level) {
     playerStamina: store.state.stamina,
     stats,
     log:           [],
-    effects:       { powerNext: false, ironTurns: 0, cryTurns: 0, unbrokenUsed: false, unbrokenActive: false },
+    effects:       { powerNext: false, ironTurns: 0, cryTurns: 0, unbrokenUsed: false, unbrokenActive: false, leechActive: false },
     ended:         false,
     waiting:       false,
   };
@@ -161,13 +164,16 @@ export function useAbility(abilityId) {
     dmgMult *= 1.5;
 
   if (ab.effect === 'iron') {
-    combat.effects.ironTurns = 3;
+    combat.effects.ironTurns = 6;
     triggerIronActivate(document.getElementById('playerCombatant'));
     addLog('<span class="log-player">You brace yourself — your skin hardens for 3 turns.</span>');
   } else if (ab.effect === 'cry') {
-    combat.effects.cryTurns = 3;
+    combat.effects.cryTurns = 6;
     triggerCryActivate(document.getElementById('playerCombatant'));
     addLog('<span class="log-player">You unleash a fierce battle cry! +50% damage for 3 turns.</span>');
+  } else if (ab.effect === 'leech') {
+    combat.effects.leechActive = true;
+    addLog('<span class="log-player">Blood Pact sealed. Your critical strikes will drain life.</span>');
   } else if (ab.effect === 'unbroken') {
     if (!combat.effects.unbrokenUsed) {
       combat.effects.unbrokenActive = true;
@@ -182,8 +188,16 @@ export function useAbility(abilityId) {
     combat.bossHP   -= r.damage;
     const hitEffect  = ab.effect === 'power' ? 'power' : (combat.effects.cryTurns > 0 ? 'cry' : undefined);
     combatHit(true, r.damage, r.crit, hitEffect);
-    if (r.crit) addLog('<span class="log-crit">CRITICAL! Your ' + ab.name + ' deals ' + r.damage + ' damage!</span>');
-    else        addLog('<span class="log-player">Your ' + ab.name + ' hits for ' + r.damage + ' damage.</span>');
+    if (r.crit) {
+      addLog('<span class="log-crit">CRITICAL! Your ' + ab.name + ' deals ' + r.damage + ' damage!</span>');
+      if (combat.effects.leechActive) {
+        const leech = Math.max(1, Math.floor(r.damage * 0.05));
+        combat.playerHP = Math.min(combat.playerMaxHP, combat.playerHP + leech);
+        addLog('<span class="log-dodge">Blood Pact: +' + leech + ' HP.</span>');
+      }
+    } else {
+      addLog('<span class="log-player">Your ' + ab.name + ' hits for ' + r.damage + ' damage.</span>');
+    }
     if (combat.effects.cryTurns > 0) combat.effects.cryTurns--;
     if (recoil > 0) {
       combat.playerHP -= recoil;
@@ -219,9 +233,9 @@ function bossTurn() {
 
   if (combat.playerHP <= 0) {
     if (combat.effects.unbrokenActive) {
-      combat.playerHP = 1;
+      combat.playerHP = Math.ceil(combat.playerMaxHP * 0.5);
       combat.effects.unbrokenActive = false;
-      addLog('<span class="log-crit">UNBROKEN! You survive at 1 HP!</span>');
+      addLog('<span class="log-crit">LAST STAND! You rise with ' + combat.playerHP + ' HP!</span>');
     } else {
       endCombat(false);
     }

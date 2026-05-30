@@ -3,7 +3,7 @@ import { CONFIG }          from './config.js';
 import { SLOTS, TIERS, ARMOR_SLOTS,
          DUNGEON_BOSSES, ABILITIES, LEVELS }  from './data.js';
 import { getCombatStats, getLevelData,
-         getCurrentLevelXP, getCurrentLevelMax } from './state.js';
+         getCurrentLevelXP, getCurrentLevelMax, getStaminaCap } from './state.js';
 import { getItemSpriteStyle, itemSpriteHtml,
          weaponSpriteStyle, offhandSpriteStyle,
          jewelrySpriteStyle, armorSpriteStyle,
@@ -212,8 +212,18 @@ function renderCharacter() {
   const xpPct = s.level >= LEVELS.length ? 100 : Math.min(100, (curXP / maxXP) * 100);
   document.getElementById('xpBar').style.width   = xpPct + '%';
   document.getElementById('xpText').textContent  = s.level >= LEVELS.length ? 'MAX LEVEL' : curXP + ' / ' + maxXP + ' XP';
-  document.getElementById('staminaBar').style.width  = (s.stamina / CONFIG.staminaCap * 100) + '%';
-  document.getElementById('staminaText').textContent = s.stamina + ' / ' + CONFIG.staminaCap;
+  const staminaCap = getStaminaCap();
+  document.getElementById('staminaBar').style.width  = (s.stamina / staminaCap * 100) + '%';
+  document.getElementById('staminaText').textContent = s.stamina + ' / ' + staminaCap;
+  const runInfoEl = document.getElementById('staminaRunInfo');
+  if (runInfoEl) {
+    const totalKm   = s.totalRunningKm || 0;
+    const bonus     = Math.floor(totalKm / 5);
+    const kmToNext  = 5 - (totalKm % 5);
+    runInfoEl.textContent = bonus > 0
+      ? `+${bonus} from running · ${kmToNext}km → +1 cap`
+      : `Every 5km run = +1 max stamina · ${kmToNext}km to first`;
+  }
   document.getElementById('strVal').textContent = stats.STR;
   document.getElementById('dexVal').textContent = stats.DEX;
   document.getElementById('vitVal').textContent = stats.VIT;
@@ -315,7 +325,7 @@ function renderStats() {
       `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_damage')}</div><div style="color:var(--text-bright);font-family:Cinzel,serif;font-size:18px;">${minDmg} – ${maxDmg}</div><div style="font-size:11px;color:var(--text-dim);">${t('stat_before_defense')}</div></div>` +
       `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_crit')}</div><div style="color:var(--gold-light);font-family:Cinzel,serif;font-size:18px;">${crit.toFixed(1)}%</div><div style="font-size:11px;color:var(--text-dim);">×${CONFIG.critMultiplier} ${t('stat_crit_mult')}</div></div>` +
       `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_reduction')}</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:18px;">${vitPct}%</div><div style="font-size:11px;color:var(--text-dim);">${t('stat_from_vit')} ${stats.VIT} · ${t('stat_max')} ${CONFIG.vitDefenseMax * 100}%</div></div>` +
-      `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_stamina')}</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:18px;">${s.stamina} / ${CONFIG.staminaCap}</div><div style="font-size:11px;color:var(--text-dim);">${t('stat_dungeon_entry')} ${CONFIG.dungeonStaminaCost}</div></div>` +
+      `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_stamina')}</div><div style="color:var(--green-light);font-family:Cinzel,serif;font-size:18px;">${s.stamina} / ${getStaminaCap()}</div><div style="font-size:11px;color:var(--text-dim);">${t('stat_dungeon_entry')} ${CONFIG.dungeonStaminaCost}</div></div>` +
       `<div><div class="stat-label" style="margin-bottom:2px;">${t('stat_trials')}</div><div style="color:var(--gold-light);font-family:Cinzel,serif;font-size:18px;">${s.dungeonsCleared} / ${DUNGEON_BOSSES.length}</div></div>` +
       `</div>`;
   }
@@ -410,7 +420,7 @@ function renderTrain() {
 function renderDungeons() {
   const s = store.state;
   const staminaText = document.getElementById('dungeonStaminaText');
-  if (staminaText) staminaText.textContent = s.stamina + ' / ' + CONFIG.staminaCap;
+  if (staminaText) staminaText.textContent = s.stamina + ' / ' + getStaminaCap();
   const staminaCost = document.getElementById('dungeonStaminaCost');
   if (staminaCost) staminaCost.textContent = CONFIG.dungeonStaminaCost;
 

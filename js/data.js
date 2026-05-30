@@ -25,12 +25,13 @@ export const LEVELS = [
 ];
 
 export const ABILITIES = [
-  { id:'basic',    name:'Basic Attack',   cost:0,  unlockLvl:1,  desc:'A standard strike.',                           effect:'basic' },
-  { id:'power',    name:'Power Strike',   cost:15, unlockLvl:2,  desc:'200% damage on this hit.',                     effect:'power' },
-  { id:'iron',     name:'Iron Skin',      cost:20, unlockLvl:4,  desc:'Reduce incoming damage by 50% for 3 turns.',   effect:'iron' },
-  { id:'cry',      name:'Battle Cry',     cost:25, unlockLvl:6,  desc:'+50% damage, stacks with others, 3 turns.',    effect:'cry' },
-  { id:'reckless', name:'Reckless Blow',  cost:30, unlockLvl:8,  desc:'300% damage, take 20 recoil.',                 effect:'reckless' },
-  { id:'unbroken', name:'Unbroken',       cost:40, unlockLvl:10, desc:'Survive one lethal hit at 1 HP.',              effect:'unbroken' },
+  { id:'basic',    name:'Basic Attack',   cost:0,  unlockLvl:1,  desc:'A standard strike.',                                                   effect:'basic'    },
+  { id:'power',    name:'Power Strike',   cost:5,  unlockLvl:2,  desc:'200% damage on this hit.',                                           effect:'power'    },
+  { id:'iron',     name:'Iron Skin',      cost:10, unlockLvl:4,  desc:'Reduce incoming damage by 50% for 6 turns.',                         effect:'iron'     },
+  { id:'cry',      name:'Battle Cry',     cost:10, unlockLvl:6,  desc:'+50% damage, stacks with others, 6 turns.',                          effect:'cry'      },
+  { id:'reckless', name:'Reckless Blow',  cost:5,  unlockLvl:8,  desc:'300% damage, take 20 recoil.',                                       effect:'reckless' },
+  { id:'leech',    name:'Blood Pact',     cost:20, unlockLvl:10, desc:'Critical hits restore 5% of damage as HP. Lasts the entire fight.',  effect:'leech'    },
+  { id:'unbroken', name:'Last Stand',     cost:20, unlockLvl:12, desc:'When receiving a killing blow, restore HP to 50% instead.',          effect:'unbroken' },
 ];
 
 export const SLOTS = [

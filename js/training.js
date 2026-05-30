@@ -2,7 +2,7 @@ import { store }          from './store.js';
 import { CONFIG }          from './config.js';
 import { EXERCISES }       from './exercises.js';
 import { NARRATIVES } from './data.js';
-import { checkLevelUp, saveState, getLevelData, parseWeight } from './state.js';
+import { checkLevelUp, saveState, getLevelData, parseWeight, getStaminaCap } from './state.js';
 import { generateShopStock } from './items.js';
 import { t, exName }       from './i18n.js';
 import { playSound }       from './audio.js';
@@ -169,6 +169,14 @@ function updatePreview(entryDiv) {
   } else {
     if (statGain > 0) text += ' · +' + statGain + ' ' + exercise.stat;
     if (vitBonus > 0) text += ' · +' + vitBonus + ' VIT';
+  }
+  if (exercise.running) {
+    const km = parseInt(entryDiv.querySelector('.ex-reps').value) || 0;
+    if (km > 0) {
+      const curKm      = store.state.totalRunningKm || 0;
+      const capIncrease = Math.floor((curKm + km) / 5) - Math.floor(curKm / 5);
+      if (capIncrease > 0) text += ' · +' + capIncrease + ' max stamina';
+    }
   }
   if (mult > 1.0) text += ' · ×' + mult.toFixed(2) + ' streak';
   preview.textContent = text;
@@ -411,6 +419,16 @@ export function logWorkout() {
   const goldEarned    = Math.floor(totalXP * CONFIG.goldPerXPRatio);
   const staminaEarned = Math.floor(totalXP * CONFIG.staminaPerXPRatio);
 
+  // Running km → max stamina cap increase
+  let sessionRunKm = 0;
+  exercises.forEach(ex => {
+    const exercise = EXERCISES.find(e => e.name === ex.name);
+    if (exercise && exercise.running) sessionRunKm += (ex.reps || 0);
+  });
+  const oldCapBonus = Math.floor((s.totalRunningKm || 0) / 5);
+  s.totalRunningKm  = (s.totalRunningKm || 0) + sessionRunKm;
+  const staminaCapIncrease = Math.floor(s.totalRunningKm / 5) - oldCapBonus;
+
   // Track distinct training days for the weekly quest
   if (!s.weekTrainingDays) s.weekTrainingDays = [];
   const d = new Date(now);
@@ -432,7 +450,7 @@ export function logWorkout() {
 
   s.totalSessions++;
   s.gold    += goldEarned;
-  s.stamina  = Math.min(CONFIG.staminaCap, s.stamina + staminaEarned);
+  s.stamina  = Math.min(getStaminaCap(), s.stamina + staminaEarned);
   s.str     += statGains.STR;
   s.dex     += statGains.DEX;
   s.vit     += statGains.VIT;
@@ -467,8 +485,8 @@ export function logWorkout() {
 
   saveState();
   playSound('gold');
-  showNarrative(totalXP, goldEarned, staminaEarned, statGains, questJustDone, questBonusXP, questGoldEarned);
-  queueRewardPopup('session', { xp: totalXP - questBonusXP, gold: goldEarned, stamina: staminaEarned, stats: statGains });
+  showNarrative(totalXP, goldEarned, staminaEarned, statGains, questJustDone, questBonusXP, questGoldEarned, staminaCapIncrease);
+  queueRewardPopup('session', { xp: totalXP - questBonusXP, gold: goldEarned, stamina: staminaEarned, stats: statGains, staminaCapIncrease });
   if (questJustDone) queueRewardPopup('quest', { boss: s.currentWeeklyBoss, streak: s.streak + 1, xp: questBonusXP, gold: questGoldEarned, streakMult: questStreakMult });
   if (leveled)       queueRewardPopup('levelup', { ability: newAbility });
 
@@ -481,7 +499,7 @@ export function logWorkout() {
 }
 
 // ── Narrative ─────────────────────────────────────────────────
-function showNarrative(xp, gold, stamina, stats, questDone, questBonus, questGold) {
+function showNarrative(xp, gold, stamina, stats, questDone, questBonus, questGold, staminaCapIncrease) {
   const text = NARRATIVES[Math.floor(Math.random() * NARRATIVES.length)];
   document.getElementById('narrativeText').textContent = '"' + text + '"';
   let rewards = `<span class="reward-chip xp">+${xp} XP</span>`;
@@ -490,6 +508,7 @@ function showNarrative(xp, gold, stamina, stats, questDone, questBonus, questGol
   if (stats.STR > 0) rewards += `<span class="reward-chip stat">+${stats.STR} STR</span>`;
   if (stats.DEX > 0) rewards += `<span class="reward-chip stat">+${stats.DEX} DEX</span>`;
   if (stats.VIT > 0) rewards += `<span class="reward-chip stat">+${stats.VIT} VIT</span>`;
+  if (staminaCapIncrease > 0) rewards += `<span class="reward-chip stamina">+${staminaCapIncrease} max stamina</span>`;
   if (questDone) rewards += `<span class="reward-chip gold">✦ QUEST! +${questGold}g +${questBonus} XP</span>`;
   document.getElementById('narrativeRewards').innerHTML = rewards;
   const box = document.getElementById('narrativeBox');
@@ -538,6 +557,7 @@ function showNextRewardPopup() {
     if (data.stats.STR > 0) rows += `<div class="reward-popup-row"><span>${t('lbl_strength')}</span><span>+${data.stats.STR}</span></div>`;
     if (data.stats.DEX > 0) rows += `<div class="reward-popup-row"><span>${t('lbl_dexterity')}</span><span>+${data.stats.DEX}</span></div>`;
     if (data.stats.VIT > 0) rows += `<div class="reward-popup-row"><span>${t('lbl_vitality')}</span><span>+${data.stats.VIT}</span></div>`;
+    if (data.staminaCapIncrease > 0) rows += `<div class="reward-popup-row" style="color:var(--green-light)"><span>Max Stamina</span><span>+${data.staminaCapIncrease}</span></div>`;
   } else if (type === 'quest') {
     titleEl.textContent = t('reward_weekly_title');
     subEl.textContent   = t('reward_weekly_falls').replace('{boss}', data.boss);

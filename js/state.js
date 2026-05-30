@@ -1,5 +1,9 @@
 import { store }  from './store.js';
 import { CONFIG }  from './config.js';
+
+export function getStaminaCap() {
+  return CONFIG.staminaCap + Math.floor((store.state.totalRunningKm || 0) / 5);
+}
 import { LEVELS, ABILITIES, TIERS, WEEKLY_BOSSES, ARMOR_SLOTS,
          WEAPON_SPRITES, WEAPON_CAT_MAP, OFFHAND_SPRITES, OFFHAND_CAT_MAP,
          JEWELRY_SPRITES, SLOT_SPRITE_CONFIG, ITEM_NAMES, STORAGE_KEY } from './data.js';
@@ -48,6 +52,7 @@ export function defaultState() {
     dungeonsCleared:      0,
     dungeonsClearedThisWeek: [],
     shopStock:            [],
+    totalRunningKm:       0,
     soundMuted:           false,
     bodyWeight:           75,
     tutorialDone:         false,

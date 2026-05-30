@@ -28,10 +28,10 @@ export const CONFIG = {
   // ── Combat ────────────────────────────────────────────────────
   baseHP:               80,
   hpPerVIT:             8,
-  critChanceCoefficient:80,
+  critChanceCoefficient:300,
   critChanceMax:        95,     // % — crit chance approaches but never reaches this
   critMultiplier:       1.5,
-  vitDefenseK:          50,     // damage reduction = VIT / (VIT + vitDefenseK)
+  vitDefenseK:          240,    // damage reduction = VIT / (VIT + vitDefenseK)
   vitDefenseMax:        0.75,   // cap on damage reduction
 
   // ── Dungeon & bosses ──────────────────────────────────────────
