@@ -341,6 +341,9 @@ function renderHistory() {
       return `<option value="${n}" ${n === historySelectedExercise ? 'selected' : ''}>${label}</option>`;
     }).join('') + `</select>`;
 
+  // All-time best for this exercise — powers the data-bar width (magnitude, whole history).
+  const bestVal = entries.reduce((max, e) => Math.max(max, entryMetric(e, info)), 0);
+
   const rowsHtml = entries.map((entry, i) => {
     const val  = entryMetric(entry, info);
     const prev = entries[i + 1];
@@ -368,11 +371,17 @@ function renderHistory() {
       cols = `<td>${weightCell}</td><td>${repsCell}</td><td>${setsCell}</td>`;
     }
 
+    // Data-bar fill = this session's share of the all-time best for this exercise.
+    const barPct = bestVal > 0 ? Math.max(3, Math.round(val / bestVal * 100)) : 0;
+
     return `<tr class="hist-row ${trendClass}">` +
       `<td class="hist-trend-dot"><span></span></td>` +
       `<td>${entry.date}</td>` +
       cols +
-      `<td>${val} ${pctHtml}</td>` +
+      `<td><div class="data-bar-cell" style="background:linear-gradient(to right, var(--data-bar-fill) ${barPct}%, transparent ${barPct}%)">` +
+        `<span class="data-bar-value">${val}</span>` +
+      `</div></td>` +
+      `<td class="hist-pct-cell">${pctHtml}</td>` +
       `</tr>`;
   }).join('');
 
@@ -381,7 +390,7 @@ function renderHistory() {
     `<div class="history-table-wrap"><table class="history-table">` +
     `<thead><tr><th></th><th>${t('hist_col_date')}</th>` +
     (isTimeBased ? '' : `<th>${t('ex_weight')}</th><th>${t('ex_reps')}</th><th>${t('ex_sets')}</th>`) +
-    `<th>${valueHeader}</th></tr></thead>` +
+    `<th>${valueHeader}</th><th></th></tr></thead>` +
     `<tbody>${rowsHtml}</tbody>` +
     `</table></div>`;
 }

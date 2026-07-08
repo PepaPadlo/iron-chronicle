@@ -31,6 +31,7 @@
   --rare-blue:#5a9fe8;
   --uncommon-green:#4caf6e;
   --epic-purple:#b06ee8;
+  --data-bar-fill:rgba(201,146,42,0.30);
 }
 
 * {
@@ -836,10 +837,25 @@ to {
 .hist-row.trend-up   .hist-trend-dot span { background:var(--green-light); box-shadow:0 0 5px var(--green-light); }
 .hist-row.trend-down .hist-trend-dot span { background:var(--red-light);   box-shadow:0 0 5px var(--red-light); }
 
-.hist-pct { font-size:11px; margin-left:2px; }
+.hist-pct-cell { white-space:nowrap; }
+.hist-pct { font-size:11px; }
 .hist-pct-flat  { color:var(--text-dim); font-style:italic; }
 .hist-pct-trend-up   { color:var(--green-light); }
 .hist-pct-trend-down { color:var(--red-light); }
+
+.data-bar-cell {
+  margin:-7px -10px;
+  padding:7px 10px;
+  border-radius:3px;
+  display:flex;
+  align-items:center;
+  white-space:nowrap;
+}
+
+.data-bar-value {
+  font-family:'Cinzel',serif;
+  color:var(--text-bright);
+}
 
 .empty-state {
   font-style:italic;
