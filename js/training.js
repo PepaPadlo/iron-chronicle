@@ -462,6 +462,7 @@ export function logWorkout() {
   const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   s.history.unshift({
     date,
+    ts: now,
     exercises: exercises.map(ex => {
       const info = EXERCISES.find(x => x.name === ex.name);
       const dn   = info ? exName(info) : ex.name;
@@ -470,18 +471,28 @@ export function logWorkout() {
       if (info && info.running) return dn + ' ' + ex.reps + 'km';
       return dn + ' ' + ex.sets + '×' + ex.reps + '@' + ex.weight + 'kg';
     }),
+    // Structured per-exercise data for the progress table (weight/reps/sets or perSets breakdown).
+    log: exercises.map(ex => ({
+      name:    ex.name,
+      weight:  ex.weight  ?? null,
+      reps:    ex.reps    ?? null,
+      sets:    ex.sets    ?? null,
+      perSets: ex.perSets ?? null,
+    })),
     xp: totalXP - questBonusXP,
   });
   if (questJustDone) {
     s.history.unshift({
       date,
+      ts: now,
       type: 'quest',
       boss: s.currentWeeklyBoss,
       xp:   questBonusXP,
       gold: questGoldEarned,
     });
   }
-  if (s.history.length > 30) s.history.pop();
+  // Keep a generous window so per-exercise progress trends have enough data points.
+  if (s.history.length > 300) s.history.pop();
 
   saveState();
   playSound('gold');

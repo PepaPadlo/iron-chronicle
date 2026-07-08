@@ -738,42 +738,74 @@ to {
   background:rgba(100,70,20,0.1);
 }
 
-.history-entry {
-  padding:10px 0;
-  border-bottom:1px solid var(--border);
+.history-select-row {
   display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
+  align-items:center;
   gap:10px;
+  margin-bottom:14px;
 }
 
-.history-entry:last-child { border-bottom:none; }
-
-.history-date {
+.history-select-row label {
   font-family:'Cinzel',serif;
   font-size:11px;
-  color:var(--text-dim);
   letter-spacing:1px;
-}
-
-.history-exercises {
-  font-size:13px;
-  color:var(--text);
-  margin-top:2px;
-  word-break:break-word;
-}
-
-.history-xp {
-  font-family:'Cinzel',serif;
-  font-size:12px;
-  color:var(--blue-light);
+  color:var(--text-dim);
   white-space:nowrap;
 }
 
-.history-quest { background:rgba(200,150,40,0.04); border-bottom-color:var(--gold-dim); }
-.history-quest-label { color:var(--gold-light); }
-.history-quest-boss { font-size:12px; color:var(--text-dim); margin-top:1px; }
-.history-quest-xp { color:var(--gold-light); }
+.history-exercise-select {
+  flex:1;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:7px 8px;
+  font-size:13px;
+  border-radius:2px;
+}
+
+.history-table-wrap { overflow-x:auto; }
+
+.history-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  white-space:nowrap;
+}
+
+.history-table th {
+  text-align:left;
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:1px;
+  color:var(--text-dim);
+  padding:6px 10px;
+  border-bottom:1px solid var(--border-gold);
+}
+
+.history-table td {
+  padding:7px 10px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+}
+
+.history-table tr:last-child td { border-bottom:none; }
+
+.hist-trend-dot { width:10px; padding-right:0; }
+.hist-trend-dot span {
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--text-dim);
+}
+
+.hist-row.trend-up   .hist-trend-dot span { background:var(--green-light); box-shadow:0 0 5px var(--green-light); }
+.hist-row.trend-down .hist-trend-dot span { background:var(--red-light);   box-shadow:0 0 5px var(--red-light); }
+
+.hist-pct { font-size:11px; margin-left:2px; }
+.hist-pct-flat  { color:var(--text-dim); font-style:italic; }
+.hist-pct-trend-up   { color:var(--green-light); }
+.hist-pct-trend-down { color:var(--red-light); }
 
 .empty-state {
   font-style:italic;
@@ -2197,7 +2229,7 @@ body.tutorial-active .container { pointer-events:none; }
 <button class="tab" data-tab="dungeons" data-i18n="tab_dungeons">Dungeons</button>
 <button class="tab" data-tab="gear" data-i18n="tab_gear">Gear</button>
 <button class="tab" data-tab="shop" data-i18n="tab_shop">Shop</button>
-<button class="tab" data-tab="history" data-i18n="tab_log">Log</button>
+<button class="tab" data-tab="history" data-i18n="tab_log">History</button>
 </div>
 <div class="tab-content active" id="tab-main">
 <div class="narrative-box" id="narrativeBox">

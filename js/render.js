@@ -32,7 +32,8 @@ function _rarityGem(item) {
   const r = itemRarity(item);
   return r !== 'common' ? `<svg class="rarity-gem ${r}"><use href="#icon-gem" xlink:href="#icon-gem"/></svg>` : '';
 }
-import { t }               from './i18n.js';
+import { t, exName }       from './i18n.js';
+import { EXERCISES }       from './exercises.js';
 
 // ── Tab / selective rendering ─────────────────────────────────
 let currentTab = 'main';
@@ -278,29 +279,111 @@ function renderQuest() {
   document.getElementById('questTimer').textContent = `Resets in ${timeStr}`;
 }
 
-// ── History tab ───────────────────────────────────────────────
+// ── History tab (per-exercise progress) ─────────────────────────
+let historySelectedExercise = null;
+
+export function setHistoryExercise(name) {
+  historySelectedExercise = name;
+  renderHistory();
+}
+
+// name -> array of { date, ts, weight, reps, sets, perSets }, newest first
+function collectExerciseLogs() {
+  const s   = store.state;
+  const map = {};
+  (s.history || []).forEach(h => {
+    if (!h.log) return;
+    h.log.forEach(entry => {
+      if (!map[entry.name]) map[entry.name] = [];
+      map[entry.name].push({ date: h.date, ts: h.ts || 0, ...entry });
+    });
+  });
+  Object.values(map).forEach(list => list.sort((a, b) => b.ts - a.ts));
+  return map;
+}
+
+// Single comparable number per entry: total volume for weighted lifts,
+// distance/duration for running & timed activities.
+function entryMetric(entry, info) {
+  if (info && (info.running || info.timed)) return entry.reps || 0;
+  if (entry.perSets && entry.perSets.length)
+    return entry.perSets.reduce((sum, st) => sum + (st.weight || 0) * (st.reps || 0), 0);
+  return (entry.weight || 0) * (entry.reps || 0) * (entry.sets || 0);
+}
+
 function renderHistory() {
-  const panel = document.getElementById('historyPanel');
-  const s     = store.state;
-  if (s.history.length === 0) {
+  const panel  = document.getElementById('historyPanel');
+  const logMap = collectExerciseLogs();
+  const names  = Object.keys(logMap);
+
+  if (names.length === 0) {
     panel.innerHTML = `<div class="empty-state">${t('history_empty')}</div>`;
     return;
   }
-  panel.innerHTML = s.history.map(h => {
-    if (h.type === 'quest') {
-      return `<div class="history-entry history-quest">` +
-        `<div style="flex:1;min-width:0;"><div class="history-date">${h.date}</div>` +
-        `<div class="history-exercises history-quest-label">✦ ${t('reward_weekly_title')}</div>` +
-        `<div class="history-quest-boss">${h.boss}</div></div>` +
-        `<div class="history-xp history-quest-xp">+${h.xp} XP · +${h.gold} ${t('reward_gold')}</div>` +
-        `</div>`;
+
+  const order = EXERCISES.map(e => e.name);
+  names.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+
+  if (!historySelectedExercise || !logMap[historySelectedExercise])
+    historySelectedExercise = names[0];
+
+  const info    = EXERCISES.find(e => e.name === historySelectedExercise);
+  const entries = logMap[historySelectedExercise];
+  const isTimeBased = info && (info.running || info.timed);
+  const valueHeader  = info && info.running ? t('hist_col_distance')
+                      : info && info.timed  ? t('hist_col_duration')
+                      : t('hist_col_volume');
+
+  const selectHtml = `<select id="historyExerciseSelect" class="history-exercise-select">` +
+    names.map(n => {
+      const exInfo = EXERCISES.find(e => e.name === n);
+      const label  = exInfo ? exName(exInfo) : n;
+      return `<option value="${n}" ${n === historySelectedExercise ? 'selected' : ''}>${label}</option>`;
+    }).join('') + `</select>`;
+
+  const rowsHtml = entries.map((entry, i) => {
+    const val  = entryMetric(entry, info);
+    const prev = entries[i + 1];
+    let trendClass = 'trend-flat', pctHtml = `<span class="hist-pct hist-pct-flat">${t('hist_no_baseline')}</span>`;
+    if (prev) {
+      const prevVal = entryMetric(prev, info);
+      if (val > prevVal)      trendClass = 'trend-up';
+      else if (val < prevVal) trendClass = 'trend-down';
+      const pct = prevVal > 0 ? Math.round((val - prevVal) / prevVal * 100) : null;
+      pctHtml = pct === null ? '' : `<span class="hist-pct hist-pct-${trendClass}">${pct > 0 ? '+' : ''}${pct}%</span>`;
     }
-    return `<div class="history-entry">` +
-      `<div style="flex:1;min-width:0;"><div class="history-date">${h.date}</div>` +
-      `<div class="history-exercises">${h.exercises.join(' · ')}</div></div>` +
-      `<div class="history-xp">+${h.xp} XP</div>` +
-      `</div>`;
+
+    let cols = '';
+    if (!isTimeBased) {
+      let weightCell, repsCell, setsCell;
+      if (entry.perSets && entry.perSets.length) {
+        weightCell = entry.perSets.map(st => st.weight).join('/');
+        repsCell   = entry.perSets.map(st => st.reps).join('/');
+        setsCell   = entry.perSets.length;
+      } else {
+        weightCell = entry.weight;
+        repsCell   = entry.reps;
+        setsCell   = entry.sets;
+      }
+      cols = `<td>${weightCell}</td><td>${repsCell}</td><td>${setsCell}</td>`;
+    }
+
+    return `<tr class="hist-row ${trendClass}">` +
+      `<td class="hist-trend-dot"><span></span></td>` +
+      `<td>${entry.date}</td>` +
+      cols +
+      `<td>${val} ${pctHtml}</td>` +
+      `</tr>`;
   }).join('');
+
+  panel.innerHTML =
+    `<div class="history-select-row"><label for="historyExerciseSelect">${t('hist_pick_exercise')}</label>${selectHtml}</div>` +
+    `<div class="history-table-wrap"><table class="history-table">` +
+    `<thead><tr><th></th><th>${t('hist_col_date')}</th>` +
+    (isTimeBased ? '' : `<th>${t('ex_weight')}</th><th>${t('ex_reps')}</th><th>${t('ex_sets')}</th>`) +
+    `<th>${valueHeader}</th></tr></thead>` +
+    `<tbody>${rowsHtml}</tbody>` +
+    `</table></div>`;
 }
 
 // ── Stats tab ─────────────────────────────────────────────────

@@ -1,12 +1,12 @@
 import { store }          from './store.js';
 import { CONFIG }          from './config.js';
-import { STORAGE_KEY }     from './data.js';
+import { STORAGE_KEY, GAME_VERSION } from './data.js';
 import { loadState, saveState, parseWeight } from './state.js';
 import { TIERS } from './data.js';
 import { itemSellPrice } from './items.js';
 import { generateShopStock } from './items.js';
 import { t }               from './i18n.js';
-import { renderAll, switchTab, hideGearTooltip } from './render.js';
+import { renderAll, switchTab, hideGearTooltip, setHistoryExercise } from './render.js';
 import { enterDungeon, exitCombat, setToast, setItemHelpers } from './combat.js';
 import { addExercise, logWorkout, saveTemplate, loadTemplate, deleteTemplate,
          showLevelUp, dismissLevelUp, dismissRewardPopup, initPerSetModal } from './training.js';
@@ -120,6 +120,12 @@ function setupEventDelegation() {
     renderAll();
   });
 
+  // History — exercise picker
+  document.getElementById('historyPanel').addEventListener('change', e => {
+    const sel = e.target.closest('#historyExerciseSelect');
+    if (sel) setHistoryExercise(sel.value);
+  });
+
   // Global touch — hide tooltip
   document.addEventListener('touchstart', () => hideGearTooltip(), { passive: true });
 }
@@ -134,7 +140,7 @@ function init() {
       store.state.shopStock = generateShopStock();
     }
 
-    document.getElementById('gameVersion').textContent = 'v0.25 · 2026-05-15';
+    document.getElementById('gameVersion').textContent = GAME_VERSION;
 
     // Static button listeners
     document.getElementById('btnAddExercise').addEventListener('click', addExercise);
