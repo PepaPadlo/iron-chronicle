@@ -1254,6 +1254,61 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   flex-direction:column;
 }
 
+.shop-columns {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  align-items:start;
+}
+
+@media (max-width:480px) {
+  .shop-columns { grid-template-columns:1fr; }
+}
+
+.blacksmith-item {
+  background:var(--bg);
+  border:1px solid var(--border);
+  padding:9px;
+  border-radius:2px;
+  margin-bottom:8px;
+}
+
+.blacksmith-item.rare     { border-color:var(--rare-blue); }
+.blacksmith-item.uncommon { border-color:var(--uncommon-green); }
+.blacksmith-item.epic     { border-color:var(--epic-purple); }
+.blacksmith-item.bs-equipped { background:var(--bg2); }
+
+.bs-item-header {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.bs-equipped-badge {
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.5px;
+  color:var(--green-light);
+  border:1px solid var(--green);
+  padding:1px 5px;
+  border-radius:2px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+.bs-upgrade-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+.btn-xs {
+  padding:4px 7px;
+  font-size:9px;
+  letter-spacing:0.5px;
+}
+
 .modal-backdrop {
   display:none;
   position:fixed;
@@ -2423,11 +2478,20 @@ body.tutorial-active .container { pointer-events:none; }
 </div>
 </div>
 <div class="tab-content" id="tab-shop">
+<div class="shop-columns">
 <div class="panel">
 <div class="panel-header"><span data-i18n="ph_shop">Merchant's Stall</span><button class="btn btn-ghost btn-sm" id="btnRefreshShop" style="padding:3px 10px;font-size:10px;" data-i18n="btn_refresh">Refresh</button></div>
 <div class="panel-body">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:13px;color:var(--text-dim);" data-i18n="shop_hint">Only normal wares — rares drop from trials.</span><span style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-light);" id="shopGoldDisplay"></span></div>
 <div id="shopList"></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-header"><span data-i18n="ph_blacksmith">Blacksmith</span></div>
+<div class="panel-body">
+<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;" data-i18n="blacksmith_hint">Spend gold to permanently upgrade a stat on any item you own. Each upgrade on that item costs more than the last.</div>
+<div id="blacksmithList"></div>
+</div>
 </div>
 </div>
 <div class="panel">

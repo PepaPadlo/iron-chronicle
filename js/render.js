@@ -8,7 +8,7 @@ import { getItemSpriteStyle, itemSpriteHtml,
          weaponSpriteStyle, offhandSpriteStyle,
          jewelrySpriteStyle, armorSpriteStyle,
          formatItemStats, formatItemStatsDetailed,
-         itemRarity, itemSellPrice } from './items.js';
+         itemRarity, itemSellPrice, itemUpgradeCost } from './items.js';
 
 function _rarityClass(item) {
   const r = itemRarity(item);
@@ -44,7 +44,7 @@ const TAB_RENDERERS = {
   train:    renderTrain,
   dungeons: renderDungeons,
   gear:     () => { renderGear(); renderInventory(); },
-  shop:     renderShop,
+  shop:     () => { renderShop(); renderBlacksmith(); },
   history:  renderHistory,
 };
 
@@ -675,4 +675,48 @@ function renderShop() {
       shopEquipGrid.appendChild(div);
     });
   }
+}
+
+// ── Blacksmith — upgrade equipped/inventory item stats ─────────
+function renderBlacksmith() {
+  const s     = store.state;
+  const panel = document.getElementById('blacksmithList');
+  if (!panel) return;
+
+  const entries = [];
+  SLOTS.forEach(slot => {
+    const item = s.equipped[slot.id];
+    if (item) entries.push({ item, equipped: true });
+  });
+  s.inventory.forEach(item => entries.push({ item, equipped: false }));
+
+  if (entries.length === 0) {
+    panel.innerHTML = `<div class="empty-state">${t('blacksmith_empty')}</div>`;
+    return;
+  }
+
+  panel.innerHTML = '';
+  entries.forEach(({ item, equipped }) => {
+    const rc   = _rarityClass(item);
+    const cost = itemUpgradeCost(item);
+    const div  = document.createElement('div');
+    div.className = 'blacksmith-item' + (rc ? ' ' + rc : '') + (equipped ? ' bs-equipped' : '');
+    const slotIcon = `<svg class="svg-icon svg-icon-sm" style="color:var(--text-dim);margin-right:4px;"><use href="#${slotIconId(item.slotId)}" xlink:href="#${slotIconId(item.slotId)}"/></svg>`;
+    const upgradeBtns = Object.keys(item.bonuses).map(stat => {
+      const canAfford = s.gold >= cost;
+      return `<button class="btn btn-ghost btn-xs" data-upgrade-item="${item.id}" data-upgrade-stat="${stat}"${!canAfford ? ' disabled' : ''}>+1 ${stat} · ${cost}g</button>`;
+    }).join('');
+    div.innerHTML =
+      `<div class="bs-item-header">` +
+        itemSpriteHtml(item, 32) +
+        `<div class="inv-info">` +
+          `<div class="inv-name${rc ? ' ' + rc : ''}">${_rarityGem(item)}${item.name.replace(/^[◆✦★]\s*/, '')}</div>` +
+          `<div class="inv-stats">${slotIcon}${item.slotName} · ${formatItemStatsDetailed(item)}</div>` +
+        `</div>` +
+        (equipped ? `<span class="bs-equipped-badge">${t('lbl_equipped_badge')}</span>` : '') +
+      `</div>` +
+      `<div class="bs-upgrade-row">${upgradeBtns}</div>`;
+    _addTooltipListeners(div, e => showItemTooltip(item, e));
+    panel.appendChild(div);
+  });
 }

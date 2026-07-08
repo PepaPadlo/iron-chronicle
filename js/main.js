@@ -3,7 +3,7 @@ import { CONFIG }          from './config.js';
 import { STORAGE_KEY, GAME_VERSION } from './data.js';
 import { loadState, saveState, parseWeight } from './state.js';
 import { TIERS } from './data.js';
-import { itemSellPrice } from './items.js';
+import { itemSellPrice, itemUpgradeCost } from './items.js';
 import { generateShopStock } from './items.js';
 import { t }               from './i18n.js';
 import { renderAll, switchTab, hideGearTooltip, setHistoryExercise } from './render.js';
@@ -78,6 +78,27 @@ function refreshShop() {
   toast(t('toast_shop_refresh'));
 }
 
+// ── Blacksmith — upgrade an equipped or inventory item's stat ──
+function findItemById(itemId) {
+  for (const slotId in store.state.equipped) {
+    if (store.state.equipped[slotId]?.id === itemId) return store.state.equipped[slotId];
+  }
+  return store.state.inventory.find(i => i.id === itemId) || null;
+}
+
+function upgradeItem(itemId, stat) {
+  const item = findItemById(itemId);
+  if (!item || item.bonuses[stat] == null) return;
+  const cost = itemUpgradeCost(item);
+  if (store.state.gold < cost) { toast('Not enough gold.'); return; }
+  store.state.gold      -= cost;
+  item.bonuses[stat]     = (item.bonuses[stat] || 0) + 1;
+  item.upgradeCount      = (item.upgradeCount || 0) + 1;
+  saveState();
+  renderAll();
+  toast('Upgraded ' + item.name + ': +1 ' + stat);
+}
+
 // ── Event delegation ──────────────────────────────────────────
 function setupEventDelegation() {
   // Tab bar
@@ -104,6 +125,12 @@ function setupEventDelegation() {
   document.getElementById('shopList').addEventListener('click', e => {
     const btn = e.target.closest('[data-buy]');
     if (btn) buyItem(parseInt(btn.dataset.buy));
+  });
+
+  // Blacksmith — upgrade
+  document.getElementById('blacksmithList').addEventListener('click', e => {
+    const btn = e.target.closest('[data-upgrade-item]');
+    if (btn) upgradeItem(btn.dataset.upgradeItem, btn.dataset.upgradeStat);
   });
 
   // Gear grid — unequip

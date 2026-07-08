@@ -34,6 +34,13 @@ export function itemSellPrice(item) {
   return tier.sellPrice * mult;
 }
 
+// ── Blacksmith upgrades ──────────────────────────────────────────
+// Escalating cost: the Nth upgrade purchased on an item costs 1000 × N gold,
+// regardless of which stat it's applied to (no per-item cap).
+export function itemUpgradeCost(item) {
+  return 1000 * ((item.upgradeCount || 0) + 1);
+}
+
 // ── Item generation ───────────────────────────────────────────
 // rarity: 'common' | 'uncommon' | 'rare' | 'epic'  (default 'common')
 export function generateItem(slotId, forceTier, rarity = 'common') {
