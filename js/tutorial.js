@@ -34,13 +34,13 @@ const TUTORIAL_STEPS = [
     highlight: [
       { id: 'exerciseList', color: '#e07840' },
       { id: 'btnAddExercise', color: '#4acbb0' },
-      { id: 'btnLogWorkout', color: '#e8b84b' },
+      { id: 'btnPlanSession', color: '#e8b84b' },
     ],
     title: { en: 'Train — Log Your Workouts', cs: 'Trénink — Zaznamenejte své cvičení', pl: 'Trening — Loguj swoje ćwiczenia' },
     body: {
-      en: 'Use <span class="tp" style="color:#4acbb0">+ Add Exercise</span> to build your session. Each <span class="tp" style="color:#e07840">exercise entry</span> has a Name selector, Weight, Reps, and Sets fields plus a Preview of what you earn. When done, hit <span class="tp" style="color:#e8b84b">Complete Session</span> to bank your XP, gold, stats and stamina.',
-      cs: 'Pomocí <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> sestavte trénink. Každý <span class="tp" style="color:#e07840">záznam cvičení</span> má výběr Názvu, pole Váhy, Opakování a Sérií a Náhled toho, co získáte. Po dokončení klepněte na <span class="tp" style="color:#e8b84b">Complete Session</span> pro získání zkušeností, zlata, statistik a výdrže.',
-      pl: 'Użyj <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span>, aby zbudować sesję. Każdy <span class="tp" style="color:#e07840">wpis ćwiczenia</span> ma selektor Nazwy, pola Ciężaru, Powtórzeń i Serii oraz Podgląd tego, co zdobędziesz. Po zakończeniu naciśnij <span class="tp" style="color:#e8b84b">Complete Session</span>, aby zainkasować XP, złoto, statystyki i wytrzymałość.',
+      en: 'Use <span class="tp" style="color:#4acbb0">+ Add Exercise</span> to build your session. Each <span class="tp" style="color:#e07840">exercise entry</span> has a Name selector, Weight, Reps, and Sets fields plus a Preview of what you earn. When done, hit <span class="tp" style="color:#e8b84b">Plan Session</span> to save it without breaking your focus — then complete it later from the Planned Sessions list to bank your XP, gold, stats and stamina.',
+      cs: 'Pomocí <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> sestavte trénink. Každý <span class="tp" style="color:#e07840">záznam cvičení</span> má výběr Názvu, pole Váhy, Opakování a Sérií a Náhled toho, co získáte. Po dokončení klepněte na <span class="tp" style="color:#e8b84b">Naplánovat sezónu</span>, aby se uložila bez přerušení tréninku — poté ji dokončete později v seznamu Naplánovaných sezón a získejte zkušenosti, zlato, statistiky a výdrž.',
+      pl: 'Użyj <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span>, aby zbudować sesję. Każdy <span class="tp" style="color:#e07840">wpis ćwiczenia</span> ma selektor Nazwy, pola Ciężaru, Powtórzeń i Serii oraz Podgląd tego, co zdobędziesz. Po zakończeniu naciśnij <span class="tp" style="color:#e8b84b">Zaplanuj sesję</span>, aby zapisać ją bez przerywania treningu — a potem dokończ ją później z listy Zaplanowanych sesji, aby zainkasować XP, złoto, statystyki i wytrzymałość.',
     },
   },
   {
@@ -110,13 +110,13 @@ const TUTORIAL_STEPS = [
     tab: 'train',
     highlight: [
       { id: 'btnAddExercise', color: '#4acbb0' },
-      { id: 'btnLogWorkout', color: '#e8b84b' },
+      { id: 'btnPlanSession', color: '#e8b84b' },
     ],
     title: { en: 'Ready, Warrior!', cs: 'Připraveni, válečníku!', pl: 'Gotowy, wojowniku!' },
     body: {
-      en: 'You now know the basics of Iron Chronicle. Click <span class="tp" style="color:#4acbb0">+ Add Exercise</span> and hit <span class="tp" style="color:#e8b84b">Complete Session</span> to begin your legend. The iron awaits!',
-      cs: 'Nyní znáte základy Iron Chronicle. Klepněte na <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> a na <span class="tp" style="color:#e8b84b">Complete Session</span>, abyste zahájili svou legendu. Železo čeká!',
-      pl: 'Znasz już podstawy Iron Chronicle. Kliknij <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span> i naciśnij <span class="tp" style="color:#e8b84b">Complete Session</span>, aby rozpocząć swoją legendę. Żelazo czeka!',
+      en: 'You now know the basics of Iron Chronicle. Click <span class="tp" style="color:#4acbb0">+ Add Exercise</span> and hit <span class="tp" style="color:#e8b84b">Plan Session</span> to begin your legend. The iron awaits!',
+      cs: 'Nyní znáte základy Iron Chronicle. Klepněte na <span class="tp" style="color:#4acbb0">+ Přidat cvičení</span> a na <span class="tp" style="color:#e8b84b">Naplánovat sezónu</span>, abyste zahájili svou legendu. Železo čeká!',
+      pl: 'Znasz już podstawy Iron Chronicle. Kliknij <span class="tp" style="color:#4acbb0">+ Dodaj ćwiczenie</span> i naciśnij <span class="tp" style="color:#e8b84b">Zaplanuj sesję</span>, aby rozpocząć swoją legendę. Żelazo czeka!',
     },
   },
 ];

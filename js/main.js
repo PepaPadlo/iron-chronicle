@@ -8,7 +8,8 @@ import { generateShopStock } from './items.js';
 import { t }               from './i18n.js';
 import { renderAll, switchTab, hideGearTooltip, setHistoryExercise } from './render.js';
 import { enterDungeon, exitCombat, setToast, setItemHelpers } from './combat.js';
-import { addExercise, logWorkout, saveTemplate, loadTemplate, deleteTemplate,
+import { addExercise, planSession, completePendingSession, discardPendingSession,
+         saveTemplate, loadTemplate, deleteTemplate,
          showLevelUp, dismissLevelUp, dismissRewardPopup, initPerSetModal } from './training.js';
 import { toast, showModal, closeModal, exportData, importData, confirmReset, forceReload } from './ui.js';
 import { initAuth, renderAuthUI, showWelcomeScreen, showSignInModal,
@@ -126,6 +127,14 @@ function setupEventDelegation() {
     if (sel) setHistoryExercise(sel.value);
   });
 
+  // Planned sessions — complete / discard
+  document.getElementById('pendingSessionsList').addEventListener('click', e => {
+    const completeBtn = e.target.closest('[data-complete-pending]');
+    if (completeBtn) { completePendingSession(completeBtn.dataset.completePending); return; }
+    const discardBtn = e.target.closest('[data-discard-pending]');
+    if (discardBtn) discardPendingSession(discardBtn.dataset.discardPending);
+  });
+
   // Global touch — hide tooltip
   document.addEventListener('touchstart', () => hideGearTooltip(), { passive: true });
 }
@@ -144,7 +153,7 @@ function init() {
 
     // Static button listeners
     document.getElementById('btnAddExercise').addEventListener('click', addExercise);
-    document.getElementById('btnLogWorkout').addEventListener('click', logWorkout);
+    document.getElementById('btnPlanSession').addEventListener('click', planSession);
     document.getElementById('btnSaveTemplate').addEventListener('click', saveTemplate);
     document.getElementById('btnLoadTemplate').addEventListener('click', loadTemplate);
     document.getElementById('btnDeleteTemplate').addEventListener('click', deleteTemplate);

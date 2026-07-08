@@ -477,7 +477,33 @@ function renderStats() {
 }
 
 // ── Train tab ─────────────────────────────────────────────────
+function renderPendingSessions() {
+  const pending = store.state.pendingSessions || [];
+  const panel   = document.getElementById('pendingSessionsPanel');
+  const list    = document.getElementById('pendingSessionsList');
+  if (!panel || !list) return;
+  if (pending.length === 0) {
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  panel.style.display = '';
+  list.innerHTML = pending.map(p =>
+    `<div class="pending-session-row">` +
+      `<div class="pending-session-info">` +
+        `<div class="pending-session-date">${p.date}</div>` +
+        `<div class="pending-session-exercises">${(p.summary || []).join(' · ')}</div>` +
+      `</div>` +
+      `<div class="pending-session-actions">` +
+        `<button class="btn btn-primary btn-sm" data-complete-pending="${p.id}">${t('btn_complete_session')}</button>` +
+        `<button class="remove-btn" title="${t('modal_delete_action')}" data-discard-pending="${p.id}">✕</button>` +
+      `</div>` +
+    `</div>`
+  ).join('');
+}
+
 function renderTrain() {
+  renderPendingSessions();
   const templates = store.state.savedTemplates || [];
   const list      = document.getElementById('templatesList');
   const empty     = document.getElementById('templatesEmpty');

@@ -552,6 +552,40 @@ body {
 
 .remove-btn:hover { opacity:1; }
 
+.pending-session-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+
+.pending-session-row:last-child { border-bottom:none; }
+
+.pending-session-info { flex:1; min-width:0; }
+
+.pending-session-date {
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  color:var(--text-dim);
+  letter-spacing:1px;
+}
+
+.pending-session-exercises {
+  font-size:13px;
+  color:var(--text);
+  margin-top:2px;
+  word-break:break-word;
+}
+
+.pending-session-actions {
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-shrink:0;
+}
+
 .form-row {
   display:grid;
   grid-template-columns:2fr 1fr 1fr 1fr;
@@ -2319,6 +2353,12 @@ body.tutorial-active .container { pointer-events:none; }
 </div>
 </div>
 <div class="tab-content" id="tab-train">
+<div class="panel" id="pendingSessionsPanel" style="display:none;">
+<div class="panel-header" data-i18n="ph_pending">Planned Sessions</div>
+<div class="panel-body">
+<div id="pendingSessionsList"></div>
+</div>
+</div>
 <div class="panel" id="templatesPanel">
 <div class="panel-header" data-i18n="ph_templates">Session Templates</div>
 <div class="panel-body">
@@ -2338,7 +2378,7 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="btn-row">
 <button class="btn btn-ghost" id="btnAddExercise" data-i18n="btn_add_exercise">+ Add Exercise</button>
 <button class="btn btn-ghost" id="btnSaveTemplate" data-i18n="btn_save_template">Save as Template</button>
-<button class="btn btn-primary" id="btnLogWorkout" data-i18n="btn_complete_session">⚔ Complete Session</button>
+<button class="btn btn-primary" id="btnPlanSession" data-i18n="btn_plan_session">📋 Plan Session</button>
 </div>
 </div>
 </div>

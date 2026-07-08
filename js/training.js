@@ -355,15 +355,74 @@ function gatherExercises() {
   return result;
 }
 
-// ── Log workout ───────────────────────────────────────────────
-export function logWorkout() {
+// ── Exercise summary (used by history + planned-session list) ──
+function summarizeExercise(ex) {
+  const info = EXERCISES.find(x => x.name === ex.name);
+  const dn   = info ? exName(info) : ex.name;
+  if (ex.perSets) return dn + ': ' + ex.perSets.map(s => s.reps + '@' + s.weight + 'kg').join(', ');
+  if (info && info.timed)   return dn + ' ' + ex.reps + 'min';
+  if (info && info.running) return dn + ' ' + ex.reps + 'km';
+  return dn + ' ' + ex.sets + '×' + ex.reps + '@' + ex.weight + 'kg';
+}
+
+// ── Plan a session (save exercises for later, no rewards yet) ──
+export function planSession() {
   const exercises = gatherExercises();
-  if (exercises.length === 0) { toast('Add at least one exercise.'); return; }
+  if (exercises.length === 0) { toast(t('toast_tpl_no_exercises')); return; }
+
+  const s = store.state;
+  if (!s.pendingSessions) s.pendingSessions = [];
+  const now  = Date.now();
+  const date = new Date(now).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  s.pendingSessions.push({
+    id:      'p' + now + '_' + Math.floor(Math.random() * 1e5),
+    date,
+    ts:      now,
+    exercises,
+    summary: exercises.map(summarizeExercise),
+  });
+  saveState();
+
+  document.getElementById('exerciseList').innerHTML = '';
+  exerciseCounter = 0;
+  addExercise();
+
+  renderAll();
+  toast(t('toast_session_planned'));
+}
+
+// ── Complete a previously planned session (banks the rewards) ──
+export function completePendingSession(id) {
+  const s   = store.state;
+  const idx = (s.pendingSessions || []).findIndex(p => p.id === id);
+  if (idx < 0) return;
+  const pending = s.pendingSessions[idx];
+  s.pendingSessions.splice(idx, 1);
+  completeSession(pending.exercises, pending.ts);
+}
+
+export function discardPendingSession(id) {
+  const s   = store.state;
+  const idx = (s.pendingSessions || []).findIndex(p => p.id === id);
+  if (idx < 0) return;
+  showModal(t('modal_discard_pending_title'), t('modal_discard_pending_body'), [
+    { label: t('modal_cancel') },
+    { label: t('modal_delete_action'), onClick() {
+      s.pendingSessions.splice(idx, 1);
+      saveState();
+      renderAll();
+      toast(t('toast_pending_discarded'));
+    }}
+  ]);
+}
+
+// ── Core reward processing (called when a planned session is completed) ──
+function completeSession(exercises, now = Date.now()) {
+  if (!exercises || exercises.length === 0) return;
 
   // ── Update streak entries, collect applied multipliers ───────
   const s = store.state;
   if (!s.exerciseStreaks) s.exerciseStreaks = {};
-  const now = Date.now();
   const streakMults = {};
   exercises.forEach(ex => {
     const entry = s.exerciseStreaks[ex.name] || { mult: 1.0, lastDone: 0 };
@@ -459,18 +518,11 @@ export function logWorkout() {
   const { leveled, newAbility } = checkLevelUp();
   if (leveled) { s.shopStock = generateShopStock(); }
 
-  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  const date = new Date(now).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   s.history.unshift({
     date,
     ts: now,
-    exercises: exercises.map(ex => {
-      const info = EXERCISES.find(x => x.name === ex.name);
-      const dn   = info ? exName(info) : ex.name;
-      if (ex.perSets) return dn + ': ' + ex.perSets.map(s => s.reps + '@' + s.weight + 'kg').join(', ');
-      if (info && info.timed)   return dn + ' ' + ex.reps + 'min';
-      if (info && info.running) return dn + ' ' + ex.reps + 'km';
-      return dn + ' ' + ex.sets + '×' + ex.reps + '@' + ex.weight + 'kg';
-    }),
+    exercises: exercises.map(summarizeExercise),
     // Structured per-exercise data for the progress table (weight/reps/sets or perSets breakdown).
     log: exercises.map(ex => ({
       name:    ex.name,
@@ -501,9 +553,6 @@ export function logWorkout() {
   if (questJustDone) queueRewardPopup('quest', { boss: s.currentWeeklyBoss, streak: s.streak + 1, xp: questBonusXP, gold: questGoldEarned, streakMult: questStreakMult });
   if (leveled)       queueRewardPopup('levelup', { ability: newAbility });
 
-  document.getElementById('exerciseList').innerHTML = '';
-  exerciseCounter = 0;
-  addExercise();
   renderAll();
   switchTab('main');
   setTimeout(showNextRewardPopup, 400);

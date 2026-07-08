@@ -47,6 +47,7 @@ export function defaultState() {
     currentWeeklyBoss:    WEEKLY_BOSSES[Math.floor(Math.random() * WEEKLY_BOSSES.length)],
     questCompleted:       false,
     history:              [],
+    pendingSessions:      [],
     inventory:            [],
     equipped:             {},
     dungeonsCleared:      0,
