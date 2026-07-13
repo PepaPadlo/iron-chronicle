@@ -235,6 +235,13 @@ function renderCharacter() {
   document.getElementById('goldVal').textContent    = s.gold;
   document.getElementById('streakVal').textContent  = s.streak;
   document.getElementById('totalVal').textContent   = s.totalSessions;
+
+  const portraitImg = document.getElementById('charPortrait');
+  if (portraitImg) {
+    const stage = Math.min(18, s.level);
+    const src = 'images/character_levels/level_' + String(stage).padStart(2, '0') + '.png';
+    if (!portraitImg.src.endsWith(src)) portraitImg.src = src;
+  }
 }
 
 function renderQuest() {

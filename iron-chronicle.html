@@ -1385,12 +1385,12 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 .character-portrait {
   display:block;
   width:140px;
-  height:140px;
+  height:210px;
   margin:0 auto 12px;
   border:2px solid var(--border-gold);
   border-radius:2px;
   background:var(--bg3);
-  object-fit:cover;
+  object-fit:contain;
   box-shadow:0 0 20px rgba(200,150,40,0.15),inset 0 0 30px rgba(0,0,0,0.5);
 }
 
@@ -2345,7 +2345,7 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="panel-header" data-i18n="ph_character">Character</div>
 <div class="panel-body">
 <div class="character-portrait-wrap">
-<img src="images/character.png" alt="Character" class="character-portrait" onerror="this.style.display='none'">
+<img src="images/character_levels/level_01.png" alt="Character" class="character-portrait" id="charPortrait" onerror="this.style.display='none'">
 <svg class="portrait-frame-corner corner-tl"><use href="#icon-corner" xlink:href="#icon-corner"/></svg>
 <svg class="portrait-frame-corner corner-tr"><use href="#icon-corner" xlink:href="#icon-corner"/></svg>
 <svg class="portrait-frame-corner corner-bl"><use href="#icon-corner" xlink:href="#icon-corner"/></svg>
