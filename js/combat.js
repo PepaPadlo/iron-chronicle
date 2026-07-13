@@ -111,6 +111,11 @@ export function enterDungeon(level) {
   bossImg.style.display = 'block';
   bossImg.src = 'images/bosses/boss_' + level + '.jpg';
 
+  const playerStage = Math.min(18, store.state.level);
+  const playerImg = document.getElementById('playerPortrait');
+  playerImg.style.display = 'block';
+  playerImg.src = 'images/character_back_levels/level_' + String(playerStage).padStart(2, '0') + '.png';
+
   addLog('<span class="log-info">You descend into the trial. ' + combat.bossName + ' stirs.</span>');
   renderCombat();
 }

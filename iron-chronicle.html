@@ -1408,6 +1408,21 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
   box-shadow:0 0 30px rgba(139,32,32,0.3),inset 0 0 40px rgba(0,0,0,0.6);
 }
 
+.player-portrait {
+  display:block;
+  width:100%;
+  max-width:185px;
+  aspect-ratio:210 / 318;
+  height:auto;
+  margin:0 auto 10px;
+  border:none;
+  background:transparent;
+  object-fit:contain;
+  filter:drop-shadow(0 0 18px rgba(74,122,204,0.22));
+  -webkit-mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
+  mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
+}
+
 .dungeon-thumb {
   width:48px;
   height:48px;
@@ -2528,7 +2543,7 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="bar-text" id="bossHpText">100 / 100</div>
 </div>
 <div class="combatant" id="playerCombatant">
-<div class="combatant-name" data-i18n="combat_you">You</div>
+<img id="playerPortrait" class="player-portrait" src="" alt="" onerror="this.style.display='none'">
 <div class="bar-wrap"><div class="bar-fill hp" id="playerHpBar" style="width:100%"></div></div>
 <div class="bar-text" id="playerHpText">100 / 100</div>
 <div style="margin-top:8px"><div class="bar-wrap"><div class="bar-fill stamina" id="playerStaminaBar" style="width:100%"></div></div>
