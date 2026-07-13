@@ -1033,7 +1033,7 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 .combat-arena {
   display:flex;
   flex-direction:column;
-  gap:8px;
+  align-items:center;
   flex:1 1 auto;
   min-width:0;
 }
@@ -1050,36 +1050,37 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 
 @media (min-width:480px) {
   .combat-main { flex-direction:row; align-items:stretch; }
-  .combat-arena { flex:1 1 56%; }
-  .combat-side  { flex:1 1 44%; }
+  .combat-arena { flex:1 1 60%; }
+  .combat-side  { flex:1 1 40%; }
 }
 
-.combatant {
-  background:var(--bg2);
-  border:1px solid var(--border);
-  padding:8px;
-  border-radius:2px;
+#bossCombatant   { position:relative; z-index:1; }
+
+#playerCombatant {
+  position:relative;
+  z-index:2;
+  margin-top:calc(-1 * clamp(6px, 1.6vh, 12px));
 }
 
-.combatant.boss {
-  border-color:var(--red);
-  align-self:center;
-  width:78%;
+.combat-status {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:10px;
 }
 
-.combatant-name {
+.status-block { }
+
+.status-name {
   font-family:'Cinzel',serif;
   font-size:12px;
-  color:var(--text-bright);
+  color:var(--red-light);
   letter-spacing:1px;
   margin-bottom:4px;
-  text-align:center;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-
-.combatant.boss .combatant-name { color:var(--red-light); }
 
 .combat-log {
   background:var(--bg);
@@ -1434,30 +1435,30 @@ to { text-shadow:0 0 60px rgba(200,150,40,1),0 0 100px rgba(200,150,40,0.4); }
 
 .boss-portrait {
   display:block;
-  height:clamp(44px, 11vh, 92px);
+  height:clamp(90px, 26vh, 210px);
   width:auto;
   aspect-ratio:1 / 1;
   max-width:100%;
-  margin:0 auto 6px;
-  border:2px solid var(--red);
-  border-radius:2px;
-  background:var(--bg3);
+  margin:0 auto;
+  border:none;
+  background:transparent;
   object-fit:cover;
-  filter:brightness(0.8) saturate(0.75) blur(0.4px);
-  box-shadow:0 0 30px rgba(139,32,32,0.3),inset 0 0 40px rgba(0,0,0,0.6);
+  filter:drop-shadow(0 0 22px rgba(200,50,50,0.28));
+  -webkit-mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
+  mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
 }
 
 .player-portrait {
   display:block;
-  height:clamp(66px, 19vh, 150px);
+  height:clamp(56px, 15vh, 120px);
   width:auto;
   aspect-ratio:210 / 318;
   max-width:100%;
-  margin:0 auto 6px;
+  margin:0 auto;
   border:none;
   background:transparent;
   object-fit:contain;
-  filter:drop-shadow(0 0 18px rgba(74,122,204,0.22)) brightness(1.05) saturate(1.05);
+  filter:drop-shadow(0 0 16px rgba(74,122,204,0.3)) brightness(1.08) saturate(1.08);
   -webkit-mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
   mask-image:radial-gradient(ellipse 62% 88% at 50% 46%, #000 62%, transparent 100%);
 }
@@ -2578,20 +2579,26 @@ body.tutorial-active .container { pointer-events:none; }
 <div class="combat-main">
 <div class="combat-arena">
 <div class="combatant boss" id="bossCombatant">
-<div class="combatant-name" id="bossName">Boss</div>
 <img id="bossPortrait" class="boss-portrait" src="" alt="" onerror="this.style.display='none'">
-<div class="bar-wrap"><div class="bar-fill hp" id="bossHpBar" style="width:100%"></div></div>
-<div class="bar-text" id="bossHpText">100 / 100</div>
 </div>
 <div class="combatant" id="playerCombatant">
 <img id="playerPortrait" class="player-portrait" src="" alt="" onerror="this.style.display='none'">
+</div>
+</div>
+<div class="combat-side">
+<div class="combat-status">
+<div class="status-block">
+<div class="status-name" id="bossName">Boss</div>
+<div class="bar-wrap"><div class="bar-fill hp" id="bossHpBar" style="width:100%"></div></div>
+<div class="bar-text" id="bossHpText">100 / 100</div>
+</div>
+<div class="status-block">
 <div class="bar-wrap"><div class="bar-fill hp" id="playerHpBar" style="width:100%"></div></div>
 <div class="bar-text" id="playerHpText">100 / 100</div>
 <div style="margin-top:6px"><div class="bar-wrap"><div class="bar-fill stamina" id="playerStaminaBar" style="width:100%"></div></div>
 <div class="bar-text" id="playerStaminaText">100 / 100 Stamina</div></div>
 </div>
 </div>
-<div class="combat-side">
 <div id="combatActions"><div class="ability-grid" id="abilityGrid"></div></div>
 </div>
 </div>
