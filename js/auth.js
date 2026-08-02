@@ -11,6 +11,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let sbClient    = null;
 let currentUser = null;
+let currentAccessToken = null;
 
 export function getCurrentUser() { return currentUser; }
 export function getSbClient()    { return sbClient; }
@@ -27,6 +28,10 @@ export function initAuth(hasLocalSave) {
     console.error('Supabase init failed', e);
   }
   registerCloudPush(pushCloudSave);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushSaveOnExit();
+  });
+  window.addEventListener('pagehide', flushSaveOnExit);
 
   if (!sbClient) {
     if (!hasLocalSave) showWelcomeScreen();
@@ -36,6 +41,7 @@ export function initAuth(hasLocalSave) {
 
   sbClient.auth.getSession().then(({ data: { session } }) => {
     currentUser = session?.user ?? null;
+    currentAccessToken = session?.access_token ?? null;
     renderAuthUI();
     if (currentUser) {
       loadCloudSave().then(cloudState => {
@@ -56,6 +62,7 @@ export function initAuth(hasLocalSave) {
 
   sbClient.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user ?? null;
+    currentAccessToken = session?.access_token ?? null;
     renderAuthUI();
     if (event === 'SIGNED_IN') {
       loadCloudSave().then(cloudState => {
@@ -150,6 +157,26 @@ export async function pushCloudSave() {
       { onConflict: 'user_id' }
     );
   } catch (e) { console.error('Cloud save failed', e); }
+}
+
+// Best-effort save fired on tab close/background — a normal fetch gets
+// cancelled mid-flight when the page unloads, so this uses `keepalive` to
+// give the browser a chance to finish it after the page starts tearing down.
+function flushSaveOnExit() {
+  if (!currentUser || !currentAccessToken) return;
+  try {
+    fetch(`${SUPABASE_URL}/rest/v1/player_saves?on_conflict=user_id`, {
+      method:    'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_KEY,
+        'Authorization': `Bearer ${currentAccessToken}`,
+        'Prefer':        'resolution=merge-duplicates',
+      },
+      body: JSON.stringify([{ user_id: currentUser.id, state: store.state, updated_at: new Date().toISOString() }]),
+    }).catch(() => {});
+  } catch (e) { /* best effort — nothing else to do at this point */ }
 }
 
 // ── Auth actions ──────────────────────────────────────────────

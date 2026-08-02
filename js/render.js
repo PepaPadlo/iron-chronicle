@@ -239,9 +239,28 @@ function renderCharacter() {
   const portraitImg = document.getElementById('charPortrait');
   if (portraitImg) {
     const stage = Math.min(18, s.level);
-    const src = 'images/character_levels/level_' + String(stage).padStart(2, '0') + '.png';
-    if (!portraitImg.src.endsWith(src)) portraitImg.src = src;
+    if (!avatarProgressionPlayed) {
+      avatarProgressionPlayed = true;
+      playAvatarProgression(portraitImg, stage);
+    } else {
+      const src = 'images/character_levels/level_' + String(stage).padStart(2, '0') + '.png';
+      if (!portraitImg.src.endsWith(src)) portraitImg.src = src;
+    }
   }
+}
+
+let avatarProgressionPlayed = false;
+
+function playAvatarProgression(imgEl, targetStage) {
+  const frame = n => 'images/character_levels/level_' + String(n).padStart(2, '0') + '.png';
+  imgEl.src = frame(1);
+  let stage = 1;
+  if (stage >= targetStage) return;
+  const timer = setInterval(() => {
+    stage++;
+    imgEl.src = frame(stage);
+    if (stage >= targetStage) clearInterval(timer);
+  }, 300);
 }
 
 function renderQuest() {

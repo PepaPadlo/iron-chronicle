@@ -488,11 +488,16 @@ function completeSession(exercises, now = Date.now()) {
   s.totalRunningKm  = (s.totalRunningKm || 0) + sessionRunKm;
   const staminaCapIncrease = Math.floor(s.totalRunningKm / 5) - oldCapBonus;
 
-  // Track distinct training days for the weekly quest
+  // Track distinct training days for the weekly quest — only if the planned
+  // date still falls within the currently active week (it may have rolled
+  // over between planning and completing the session).
   if (!s.weekTrainingDays) s.weekTrainingDays = [];
-  const d = new Date(now);
-  const todayKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-  if (!s.weekTrainingDays.includes(todayKey)) s.weekTrainingDays.push(todayKey);
+  const weekEnd = (s.weekStart || 0) + 7 * 24 * 60 * 60 * 1000;
+  if (now >= (s.weekStart || 0) && now < weekEnd) {
+    const d = new Date(now);
+    const todayKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    if (!s.weekTrainingDays.includes(todayKey)) s.weekTrainingDays.push(todayKey);
+  }
 
   let questBonusXP    = 0;
   let questGoldEarned = 0;
