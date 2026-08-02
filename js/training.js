@@ -29,12 +29,19 @@ function getPreviewMult(name) {
 }
 
 // ── XP / stat helpers ─────────────────────────────────────────
+// Squats and weighted pull-ups only ask for the added load (barbell/plate,
+// weighted vest) — the actual work done also carries the lifter's body weight.
+function effectiveWeight(exercise, weight) {
+  return exercise.addsBodyWeight ? weight + (store.state.bodyWeight || 0) : weight;
+}
+
 export function calcExerciseXP(ex) {
   const exercise = EXERCISES.find(e => e.name === ex.name);
   if (!exercise) return 0;
   if (exercise.timed || exercise.running)
     return Math.round(ex.reps * exercise.coeff);
-  return Math.round(ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff / CONFIG.xpDivisor);
+  const weight = effectiveWeight(exercise, ex.weight);
+  return Math.round(weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff / CONFIG.xpDivisor);
 }
 
 export function calcStatGain(ex) {
@@ -46,7 +53,8 @@ export function calcStatGain(ex) {
       ? Math.floor(raw * CONFIG.statYieldRunning)
       : Math.floor(raw * CONFIG.statYieldActivity);
   }
-  const effort = ex.weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff;
+  const weight = effectiveWeight(exercise, ex.weight);
+  const effort = weight * Math.sqrt(ex.reps) * ex.sets * exercise.coeff;
   const gain   = Math.floor(effort / CONFIG.statGainDivisor);
   if (exercise.stat === 'STR') return Math.floor(gain * CONFIG.statYieldSTR);
   if (exercise.stat === 'DEX') return Math.floor(gain * CONFIG.statYieldDEX);
@@ -137,7 +145,7 @@ function updatePreview(entryDiv) {
     });
     // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
     const totalEffort = perSets.reduce((sum, s) =>
-      sum + s.weight * Math.sqrt(s.reps) * exercise.coeff, 0);
+      sum + effectiveWeight(exercise, s.weight) * Math.sqrt(s.reps) * exercise.coeff, 0);
     const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
     const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
                      exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :
@@ -451,7 +459,7 @@ function completeSession(exercises, now = Date.now()) {
     if (ex.perSets && !exercise.timed && !exercise.running) {
       // Aggregate effort across all sets before flooring to avoid per-set rounding to zero
       const totalEffort = ex.perSets.reduce((sum, s) =>
-        sum + s.weight * Math.sqrt(s.reps) * exercise.coeff, 0);
+        sum + effectiveWeight(exercise, s.weight) * Math.sqrt(s.reps) * exercise.coeff, 0);
       const baseGain = Math.floor(totalEffort / CONFIG.statGainDivisor);
       const rawGain  = exercise.stat === 'STR' ? Math.floor(baseGain * CONFIG.statYieldSTR) :
                        exercise.stat === 'DEX' ? Math.floor(baseGain * CONFIG.statYieldDEX) :

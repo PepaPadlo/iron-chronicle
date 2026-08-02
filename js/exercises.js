@@ -1,9 +1,9 @@
 export const EXERCISES = [
   // ── STR ──────────────────────────────────────────────────────────────────
   { name: "Deadlift",           coeff: 1.20, stat: "STR", names: { cs: "Mrtvý tah",              pl: "Martwy ciąg" } },
-  { name: "Squat",              coeff: 1.35, stat: "STR", names: { cs: "Dřep",                   pl: "Przysiad" } },
+  { name: "Squat (Enter the weight of the barbell)",              coeff: 1.35, stat: "STR", names: { cs: "Dřep (zadávej váhu činky)",                   pl: "Przysiad (Wprowadź wagę hantla)" }, addsBodyWeight: true },
   { name: "Bench Press",        coeff: 1.42, stat: "STR", names: { cs: "Bench press",            pl: "Wyciskanie sztangi" } },
-  { name: "dumbell Press",      coeff: 1.62, stat: "STR", names: { cs: "jednoruční tlaky na prsa",    pl: "wyciskanie hantli" } },
+  { name: "dumbell Press (1h weight input)",      coeff: 3.24, stat: "STR", names: { cs: "jednoruční tlaky na prsa (zadávej váhu 1 činky)",    pl: "wyciskanie hantli (Wprowadź wagę 1 hantla)" } },
   { name: "Peck deck",          coeff: 3.06, stat: "STR", names: { cs: "Peck deck",              pl: "maszyna do rozpiętek" } },
   { name: "Overhead Press",     coeff: 2.70, stat: "STR", names: { cs: "Tlak nad hlavou",        pl: "Wyciskanie nad głowę" } },
   { name: "Barbell Row",        coeff: 1.87, stat: "STR", names: { cs: "Přítah s osou",          pl: "Wiosłowanie sztangą" } },
@@ -17,7 +17,7 @@ export const EXERCISES = [
   { name: "Shrugs",             coeff: 1.20, stat: "STR", names: { cs: "Krčení ramen trapezy",    pl: "wzrusza ramionami" } },
 
   // ── DEX ──────────────────────────────────────────────────────────────────
-  { name: "Pull-up",            coeff: 1.20, stat: "DEX", names: { cs: "Přítah na hrazdě",      pl: "Podciąganie" } },
+  { name: "Pull-up (enter the added weight)",            coeff: 1.20, stat: "DEX", names: { cs: "Přítah na hrazdě (zadej extra váhu)",      pl: "Podciąganie (Wprowadź dodatkową wagę)" }, addsBodyWeight: true },
   { name: "Lat pulldown",       coeff: 1.20, stat: "DEX", names: { cs: "Stahování horní kladky",pl: "ściąganie drążka wyciągu" } },
   { name: "Lunges",             coeff: 1.19, stat: "DEX", names: { cs: "Výpady",                pl: "Wykroki" } },
   { name: "Dip",                coeff: 1.20, stat: "DEX", names: { cs: "Dip",                   pl: "Dip" } },
