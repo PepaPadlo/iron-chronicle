@@ -239,40 +239,49 @@ function renderCharacter() {
   const portraitImg = document.getElementById('charPortrait');
   if (portraitImg) {
     const stage = Math.min(18, s.level);
+    const src   = 'images/character_levels/level_' + String(stage).padStart(2, '0') + '.png';
     if (!avatarProgressionPlayed) {
-      avatarProgressionPlayed = true;
-      playAvatarProgression(portraitImg, stage);
-    } else {
-      const src = 'images/character_levels/level_' + String(stage).padStart(2, '0') + '.png';
-      if (!portraitImg.src.endsWith(src)) portraitImg.src = src;
+      avatarProgressionPlayed  = true;
+      avatarProgressionPending = true;
+      playAvatarProgression(portraitImg, stage).then(() => {
+        avatarProgressionPending = false;
+        // A cloud sync (or other state change) may have landed mid-animation —
+        // re-check the live level now that the scripted sequence is done.
+        const finalStage = Math.min(18, store.state.level);
+        const finalSrc = 'images/character_levels/level_' + String(finalStage).padStart(2, '0') + '.png';
+        if (!portraitImg.src.endsWith(finalSrc)) portraitImg.src = finalSrc;
+      });
+    } else if (!avatarProgressionPending && !portraitImg.src.endsWith(src)) {
+      portraitImg.src = src;
     }
   }
 }
 
-let avatarProgressionPlayed = false;
+let avatarProgressionPlayed  = false;
+let avatarProgressionPending = false;
 
 function playAvatarProgression(imgEl, targetStage) {
   const frame = n => 'images/character_levels/level_' + String(n).padStart(2, '0') + '.png';
-  if (targetStage <= 1) { imgEl.src = frame(1); return; }
+  if (targetStage <= 1) { imgEl.src = frame(1); return Promise.resolve(); }
 
   // Preload every frame first — swapping img.src on a timer without this
   // means frames still in flight over the network can arrive late or out
   // of order, making the sequence look glitchy instead of a clean step-through.
   const urls = [];
   for (let i = 1; i <= targetStage; i++) urls.push(frame(i));
-  Promise.all(urls.map(src => new Promise(resolve => {
+  return Promise.all(urls.map(src => new Promise(resolve => {
     const img = new Image();
     img.onload = img.onerror = resolve;
     img.src = src;
-  }))).then(() => {
+  }))).then(() => new Promise(resolve => {
     let stage = 1;
     imgEl.src = frame(1);
     const timer = setInterval(() => {
       stage++;
       imgEl.src = frame(stage);
-      if (stage >= targetStage) clearInterval(timer);
+      if (stage >= targetStage) { clearInterval(timer); resolve(); }
     }, 300);
-  });
+  }));
 }
 
 function renderQuest() {
