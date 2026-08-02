@@ -253,14 +253,26 @@ let avatarProgressionPlayed = false;
 
 function playAvatarProgression(imgEl, targetStage) {
   const frame = n => 'images/character_levels/level_' + String(n).padStart(2, '0') + '.png';
-  imgEl.src = frame(1);
-  let stage = 1;
-  if (stage >= targetStage) return;
-  const timer = setInterval(() => {
-    stage++;
-    imgEl.src = frame(stage);
-    if (stage >= targetStage) clearInterval(timer);
-  }, 300);
+  if (targetStage <= 1) { imgEl.src = frame(1); return; }
+
+  // Preload every frame first — swapping img.src on a timer without this
+  // means frames still in flight over the network can arrive late or out
+  // of order, making the sequence look glitchy instead of a clean step-through.
+  const urls = [];
+  for (let i = 1; i <= targetStage; i++) urls.push(frame(i));
+  Promise.all(urls.map(src => new Promise(resolve => {
+    const img = new Image();
+    img.onload = img.onerror = resolve;
+    img.src = src;
+  }))).then(() => {
+    let stage = 1;
+    imgEl.src = frame(1);
+    const timer = setInterval(() => {
+      stage++;
+      imgEl.src = frame(stage);
+      if (stage >= targetStage) clearInterval(timer);
+    }, 300);
+  });
 }
 
 function renderQuest() {
